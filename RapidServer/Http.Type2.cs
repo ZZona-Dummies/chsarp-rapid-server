@@ -1,4 +1,14 @@
-﻿namespace RapidServer.Http.Type2
+﻿using Net = System.Net;
+using Xml = System.Xml;
+using IO = System.IO;
+using Threading = System.Threading;
+using Text = System.Text;
+using System;
+using static RapidServer.Globals;
+using System.Collections;
+using System.Collections.Generic;
+
+namespace RapidServer.Http.Type2
 {
 
     // '' <summary>
@@ -50,8 +60,6 @@
 
         event EventHandler ClientConnecting;
 
-        private Request req;
-
         private Net.Sockets.Socket socket;
 
         private string head;
@@ -61,8 +69,6 @@
         private Net.Sockets.Socket argClientSocket;
 
         event EventHandler ClientDisconnected;
-
-        private Net.Sockets.Socket argClientSocket;
 
         // '' <summary>
         // '' Constructs a new HTTP server given a desired web root path.
@@ -106,15 +112,15 @@
             //  parse the MIME types, letting us know what compression and expiration settings to use when serving them to clients:
             foreach (Xml.XmlNode n in root["MimeTypes"])
             {
-                string[] fileExtensions = n.Attributes["FileExtension"].GetValue.Split(",");
+                string[] fileExtensions = n.Attributes["FileExtension"].Value.Split(',');
                 foreach (string ext in fileExtensions)
                 {
                     MimeType m = new MimeType();
-                    m.Name = n.GetValue;
+                    m.Name = n.Value;
                     m.FileExtension = ext;
-                    m.Compress = Enum.Parse(typeof(CompressionMethod), n.Attributes["Compress"].GetValue, true);
-                    m.Expires = n.Attributes["Expires"].GetValue;
-                    m.Handler = n.Attributes["Handler"].GetValue;
+                    m.Compress = (CompressionMethod)Enum.Parse(typeof(CompressionMethod), n.Attributes["Compress"].Value, true);
+                    m.Expires = n.Attributes["Expires"].Value;
+                    m.Handler = n.Attributes["Handler"].Value;
                     MimeTypes.Add(m.FileExtension, m);
                 }
 
@@ -127,7 +133,7 @@
             }
 
             //  parse the response headers, which let us include certain headers in the http response by default:
-            if ((root["ResponseHeaders"].Attributes["Enabled"].InnerText == true))
+            if (bool.Parse(root["ResponseHeaders"].Attributes["Enabled"].InnerText) == true)
             {
                 foreach (Xml.XmlNode n in root["ResponseHeaders"])
                 {
@@ -167,16 +173,10 @@
             string ext = IO.Path.GetExtension(path).TrimStart(".");
             MimeType m = MimeTypes[ext];
             string contentType;
-            if (m)
-            {
-                IsNot;
-                null;
+            if (m != null)
                 contentType = m.Name;
-            }
             else
-            {
                 contentType = "text/plain";
-            }
 
             return contentType;
         }
@@ -193,8 +193,7 @@
             _bufferManager.InitBuffer();
             Net.Sockets.SocketAsyncEventArgs readWriteEventArg = new Net.Sockets.SocketAsyncEventArgs();
             //  allocate enough memory in the shared buffer, and enough SocketAsyncEventArgs objects, for the max connections that we wish to support
-            for (i = 0; (i
-                        <= (_maxConnections - 1)); i++)
+            for (int i = 0; int i <= _maxConnections - 1; i++)
             {
                 readWriteEventArg = new Net.Sockets.SocketAsyncEventArgs();
                 readWriteEventArg.Completed += new System.EventHandler(this.IoCompleted);
@@ -269,10 +268,8 @@
                 case Net.Sockets.SocketAsyncOperation.Receive:
                     this.ProcessReceive(e);
                     break;
-                    break;
                 case Net.Sockets.SocketAsyncOperation.Send:
                     this.ProcessSend(e);
-                    break;
                     break;
                 default:
                     Beep();
@@ -584,7 +581,7 @@
         {
             _server = server;
             object requestString = System.Text.Encoding.ASCII.GetString(buffer);
-            this.ParseRequestString(requestString);
+            this.ParseRequestString((string)requestString);
         }
 
         // '' <summary>
@@ -594,13 +591,13 @@
         // '' <remarks></remarks>
         void ParseRequestString(string requestString)
         {
-            string[] requestStringParts = requestString.Split("\r\n");
+            string[] requestStringParts = requestString.Split('\n');
             //  parse the request-line which is the first line in the request string (e.g. "GET /file.html HTTP/1.1")
             object httpRequestLine = requestStringParts[0];
             // requestString.Split(vbNewLine)(0)
             //  parse the uri (including query string) from the request-line
             //  TODO: during a few refreshes, an exception is thrown here because the requestString is fragmented - "36 Accept(-Encoding) : gzip, deflate, sdch Accept-Language: en-US,en;q=0.8
-            this.Uri = httpRequestLine.Substring(4, (httpRequestLine.Length - 13)).Replace("/", "\\");
+            this.Uri = ((string)httpRequestLine).Substring(4, (((string)httpRequestLine).Length - 13)).Replace("/", "\\");
             //  split the uri and query string into their separate components
             int qsIndex = this.Uri.IndexOf("?");
             if ((qsIndex != -1))
@@ -628,18 +625,17 @@
             }
 
             //  parse the requested resource's file type (extension) and path
-            this.FileType = IO.Path.GetExtension(this.Uri).TrimStart(".");
+            this.FileType = IO.Path.GetExtension(Uri).TrimStart('.');
             //  parse the requested resource's mime type
-            MimeType m = _server.MimeTypes(FileType);
+            MimeType m = _server.MimeTypes[FileType];
             if ((m == null))
             {
-                m = _server.MimeTypes("");
+                m = _server.MimeTypes[""];
             }
 
             this.MimeType = m;
             //  parse the remaining request headers
-            for (i = 1; (i
-                        <= (requestStringParts.Length - 2)); i++)
+            for (int i = 1; i <= (requestStringParts.Length - 2; i++)
             {
                 int delimIndex = requestStringParts[i].IndexOf(": ");
                 if ((delimIndex > 0))
@@ -700,7 +696,7 @@
         {
             if ((req.Headers.ContainsKey("Connection") == true))
             {
-                if ((req.Headers("Connection").ToString.ToLower == "keep-alive"))
+                if ((req.Headers["Connection"].ToString().ToLower() == "keep-alive"))
                 {
                     this.SetHeader("Connection", "keep-alive");
                 }
@@ -711,7 +707,7 @@
             MimeType = req.MimeType;
             if ((MimeType.Compress != CompressionMethod.None))
             {
-                this.SetHeader("Content-Encoding", Enum.GetName(typeof(CompressionMethod), MimeType.Compress).ToLower);
+                this.SetHeader("Content-Encoding", Enum.GetName(typeof(CompressionMethod), MimeType.Compress).ToLower());
             }
 
             //  set any custom request headers defined in the config file
@@ -752,10 +748,8 @@
         {
             //  TODO: conditionally set Content-Length if needed - the header is not always necessary (e.g. when TransferMethod = ChunkedEncoding)
             IO.MemoryStream ms = new IO.MemoryStream();
-            if (contentBytes)
+            if (contentBytes != null)
             {
-                IsNot;
-                null;
                 if ((MimeType.Compress == CompressionMethod.Gzip))
                 {
                     System.IO.Compression.GZipStream gZip = new System.IO.Compression.GZipStream(ms, IO.Compression.CompressionMode.Compress, true);
@@ -780,13 +774,13 @@
 
             }
 
-            byte[,] cbuf;
+            byte[,] cbuf = null;
             //  create a buffer exactly the size of the memorystream length (not its buffer length)
-            byte[] mbuf = ms.GetBuffer;
+            byte[] mbuf = ms.GetBuffer();
             ms.Close();
             ms.Dispose();
             Buffer.BlockCopy(mbuf, 0, cbuf, 0, cbuf.Length);
-            this.ContentLength = cbuf.Length;
+            this.ContentLength = cbuf.GetLength(0).ToString(); //???
             _content = cbuf;
         }
 
@@ -839,15 +833,13 @@
             byte[] headerBytes = System.Text.Encoding.ASCII.GetBytes(GetHeaderString);
             ms.Write(headerBytes, 0, headerBytes.Length);
             //  if there is content, add it to the response
-            if (_content)
+            if (_content != null)
             {
-                IsNot;
-                null;
                 ms.Write(_content, 0, _content.Length);
             }
 
-            byte[,] rbuf;
-            byte[] mbuf = ms.GetBuffer;
+            byte[,] rbuf = null;
+            byte[] mbuf = ms.GetBuffer();
             Buffer.BlockCopy(mbuf, 0, rbuf, 0, rbuf.Length);
             return rbuf;
         }
