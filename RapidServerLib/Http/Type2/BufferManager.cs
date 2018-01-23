@@ -39,7 +39,7 @@ namespace RapidServer.Http.Type2
         //  Assigns a buffer from the buffer pool to thespecified SocketAsyncEventArgs object returns true if the buffer was successfully set, else false.
         public bool SetBuffer(SocketAsyncEventArgs args)
         {
-            if ((m_freeIndexPool.Count > 0))
+            if (m_freeIndexPool.Count > 0)
                 args.SetBuffer(m_buffer, m_freeIndexPool.Pop(), m_bufferSize);
             else
             {

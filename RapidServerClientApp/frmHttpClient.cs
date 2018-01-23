@@ -83,7 +83,7 @@ namespace RapidServerClientApp
             //    not set to an instance of an object'. a custom function GetValue() helps avoid nulls but not this. default values should
             //    be assumed by the server for cases when the value can't be loaded from the config, or the server should regenerate the config
             //    per its known format and then load it.
-            if ((IO.File.Exists("client.xml") == false))
+            if (IO.File.Exists("client.xml"))
             {
                 CreateConfig();
             }
@@ -121,18 +121,12 @@ namespace RapidServerClientApp
                 t.Time = n["Time"].Value;
                 foreach (Xml.XmlNode nn in n["Data"])
                 {
-                    if ((nn.Name == "RPS"))
-                    {
+                    if (nn.Name == "RPS")
                         t.Data.RPS = nn.InnerText;
-                    }
-                    else if ((nn.Name == "CompletedRequests"))
-                    {
+                    else if (nn.Name == "CompletedRequests")
                         t.Data.CompletedRequests = nn.InnerText;
-                    }
-                    else if ((nn.Name == "ResponseTime"))
-                    {
+                    else if (nn.Name == "ResponseTime")
                         t.Data.ResponseTime = nn.InnerText;
-                    }
                 }
 
                 Tools.Add(t.Name, t);
@@ -145,7 +139,7 @@ namespace RapidServerClientApp
 
         private void DetectSystemInfo()
         {
-            if ((Chart1.Titles.Count == 1))
+            if (Chart1.Titles.Count == 1)
             {
                 //  get os
                 ManagementObjectSearcher wmios = new ManagementObjectSearcher("SELECT * FROM  Win32_OperatingSystem");
@@ -180,17 +174,10 @@ namespace RapidServerClientApp
         //  runs the benchmark tool with selected parameters
         private void RunBenchmark()
         {
-            if ((TabControl3.SelectedTab.Text == "Speed"))
-            {
+            if (TabControl3.SelectedTab.Text == "Speed")
                 SpeedBenchmark();
-            }
-            else if ((TabControl3.SelectedTab.Text == "Time"))
-            {
+            else if (TabControl3.SelectedTab.Text == "Time")
                 TimeBenchmark();
-            }
-            else
-            {
-            }
         }
 
         //  TODO: this gets an unhandled exception when it tries to parse data that doesn't exist, we shouldn't assume
@@ -201,15 +188,11 @@ namespace RapidServerClientApp
             {
                 string ss = "";
                 int i;
-                if ((startTag.ToLower() == Environment.NewLine))
-                {
+                if (startTag.ToLower() == Environment.NewLine)
                     startTag = Environment.NewLine;
-                }
 
-                if ((endTag.ToLower() == Environment.NewLine))
-                {
+                if (endTag.ToLower() == Environment.NewLine)
                     endTag = Environment.NewLine;
-                }
 
                 i = s.IndexOf(startTag);
                 ss = s.Substring((i + startTag.Length));
@@ -226,18 +209,16 @@ namespace RapidServerClientApp
 
         private string[] ParseAny(string s)
         {
-            if ((s == ""))
-            {
+            if (s == "")
                 return new string[] {
                     "FAIL WHALE!"};
-            }
 
             string[] results = null;
             string[] spl = s.Split(',');
-            if ((spl[0] == "stdout"))
+            if (spl[0] == "stdout")
             {
                 //  data is in stdout
-                if ((spl[1] == "between"))
+                if (spl[1] == "between")
                     results[0] = SubstringBetween(stdout, spl[2], spl[3]);
             }
             else
@@ -245,7 +226,7 @@ namespace RapidServerClientApp
                 //  data is in a file
                 IO.StreamReader f = new IO.StreamReader(spl[0]);
                 char delim = Convert.ToChar(0);
-                if ((spl[1] == "tabs"))
+                if (spl[1] == "tabs")
                     delim = '\t';
                 else
                     delim = ',';
@@ -263,58 +244,44 @@ namespace RapidServerClientApp
                 //  TODO: check if we should read the file as rows or as summary...
                 //  read the file as rows
                 List<string> lines = new List<string>();
-                while ((f.Peek() != -1))
+                while (f.Peek() != -1)
                     lines.Add(f.ReadLine());
 
                 f.Close();
                 f.Dispose();
                 //  filter the rows
-                if ((spl[2] == "first"))
+                if (spl[2] == "first")
                 {
                     //  grab the first row only
-                    for (int i = 0; (i
-                                <= (lines.Count - 1)); i++)
-                    {
+                    for (int i = 0; i <= lines.Count - 1; i++)
                         lines.RemoveAt(1);
-                    }
 
                     string line = lines[0];
                     string[] fields = line.Split(delim);
-                    if ((useFormula == true))
+                    if (useFormula)
                     {
                         int val = 0;
-                        for (int i = 0; (i
-                                    <= (formula.Length - 1)); i++)
-                        {
+                        for (int i = 0; (i <= (formula.Length - 1)); i++)
                             val = val + int.Parse(fields[int.Parse(formula[i])]);
-                        }
 
                         results[0] = val.ToString();
                     }
                     else
-                    {
                         results[0] = fields[int.Parse(spl[3])].Trim();
-                    }
                 }
-                else if ((spl[2] == "last"))
+                else if (spl[2] == "last")
                 {
                     //  grab the last row only
-                    for (int i = 0; (i
-                                <= (lines.Count - 2)); i++)
-                    {
+                    for (int i = 0; (i <= (lines.Count - 2)); i++)
                         lines.RemoveAt(0);
-                    }
 
                     string line = lines[0];
                     string[] fields = line.Split(delim);
-                    if ((useFormula == true))
+                    if (useFormula)
                     {
                         int val = 0;
-                        for (int i = 0; (i
-                                    <= (formula.Length - 1)); i++)
-                        {
+                        for (int i = 0; (i <= (formula.Length - 1)); i++)
                             val = val + int.Parse(fields[int.Parse(formula[i])]);
-                        }
 
                         results[0] = val.ToString();
                     }
@@ -327,23 +294,17 @@ namespace RapidServerClientApp
                 {
                     //  grab all the rows after a specific row index
                     for (int i = 0; i <= int.Parse(spl[2]) - 1; i++)
-                    {
                         lines.RemoveAt(i);
-                    }
 
-                    for (int i = 0; (i
-                                <= (lines.Count - 1)); i++)
+                    for (int i = 0; i <= lines.Count - 1; i++)
                     {
                         string line = lines[i];
                         string[] fields = line.Split(delim);
-                        if ((useFormula == true))
+                        if (useFormula)
                         {
                             int val = 0;
-                            for (int ii = 0; (ii
-                                        <= (formula.Length - 1)); ii++)
-                            {
+                            for (int ii = 0; (ii <= (formula.Length - 1)); ii++)
                                 val = val + int.Parse(fields[int.Parse(formula[ii])]);
-                            }
 
                             results[(results.Length - 1)] = val.ToString();
                         }
@@ -368,22 +329,15 @@ namespace RapidServerClientApp
             // Dim time() As String = ParseAny(currentTool.Data.ResponseTime)
             //  chart it
             bool failedParse = false;
-            if (((requestsPerSecond[0] == "")
-                        || (completedRequests[0] == "")))
-            {
+            if (requestsPerSecond[0] == "" || completedRequests[0] == "")
                 failedParse = true;
-            }
 
-            if ((failedParse == false))
+            if (failedParse)
             {
                 Site currentSite = null;
                 foreach (Site s in Sites.Values)
-                {
-                    if ((s.Url == cboUrl.Text))
-                    {
+                    if (s.Url == cboUrl.Text)
                         currentSite = s;
-                    }
-                }
 
                 string seriesName = cboUrl.Text;
                 if (currentSite != null)
@@ -394,41 +348,33 @@ namespace RapidServerClientApp
                     TextBox1.AppendText((seriesName + (" - "
                                     + (requestsPerSecond[0] + '\n'))));
                     //  plot the requests completed value to the bar chart
-                    if ((Chart1.Series.IndexOf(seriesName) == -1))
-                    {
+                    if (Chart1.Series.IndexOf(seriesName) == -1)
                         Chart1.Series.Add(seriesName);
-                    }
 
                     Chart1.Series[seriesName].Points.AddXY(0, requestsPerSecond[0]);
                     //  plot the requests completed value to the bar chart
-                    if ((Chart2.Series.IndexOf(seriesName) == -1))
-                    {
+                    if (Chart2.Series.IndexOf(seriesName) == -1)
                         Chart2.Series.Add(seriesName);
-                    }
 
                     Chart2.Series[seriesName].Points.AddXY(0, completedRequests[0]);
                     //  plot the gnuplot data to the line graph
-                    if ((Chart3.Series.IndexOf(seriesName) == -1))
+                    if (Chart3.Series.IndexOf(seriesName) == -1)
                     {
                         //  create the series for this url
                         Chart3.Series.Add(seriesName);
                         Chart3.Series[seriesName].ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.FastLine;
                     }
                     else
-                    {
                         //  series was already plotted, clear the series and replot it
                         Chart3.Series[seriesName].Points.Clear();
-                    }
 
                     // For Each s As String In time
                     //     Chart3.Series[seriesName).Points.AddXY(0, s)
                     // Next
                 }
                 else
-                {
                     //  update the rps log
                     TextBox1.AppendText(("FAIL WHALE!" + '\n'));
-                }
             }
         }
 
@@ -501,20 +447,13 @@ namespace RapidServerClientApp
         {
             btnGo.Enabled = false;
             txtRaw.Text = "";
-            if ((TabControl1.SelectedTab.Text == "Benchmark"))
-            {
+            if (TabControl1.SelectedTab.Text == "Benchmark")
                 RunBenchmark();
-            }
             else
             {
                 client.Go(cboUrl.Text, null);
-                if (cboUrl.Items.Contains(cboUrl.Text))
-                {
-                }
-                else
-                {
+                if (!cboUrl.Items.Contains(cboUrl.Text))
                     cboUrl.Items.Add(cboUrl.Text);
-                }
             }
 
             btnGo.Enabled = true;
@@ -522,14 +461,10 @@ namespace RapidServerClientApp
 
         private void chkWrapLog_CheckedChanged(object sender, EventArgs e)
         {
-            if ((chkWrapLog.Checked == true))
-            {
+            if (chkWrapLog.Checked)
                 txtLog.WordWrap = true;
-            }
             else
-            {
                 txtLog.WordWrap = false;
-            }
         }
 
         private void btnDetectSystemInfo_Click(object sender, EventArgs e)
@@ -539,20 +474,14 @@ namespace RapidServerClientApp
 
         private void btnClear_Click(object sender, EventArgs e)
         {
-            while ((Chart1.Series.Count > 0))
-            {
+            while (Chart1.Series.Count > 0)
                 Chart1.Series.RemoveAt(0);
-            }
 
-            while ((Chart3.Series.Count > 0))
-            {
+            while (Chart3.Series.Count > 0)
                 Chart3.Series.RemoveAt(0);
-            }
 
-            while ((Chart2.Series.Count > 0))
-            {
+            while (Chart2.Series.Count > 0)
                 Chart2.Series.RemoveAt(0);
-            }
 
             TextBox1.Text = "";
         }
@@ -561,35 +490,23 @@ namespace RapidServerClientApp
         {
             Tool t = (Tool)Tools[cboBenchmarkTool.Text];
             if (t.Speed.Contains("%num"))
-            {
                 txtBenchmarkNumber.Enabled = true;
-            }
             else
-            {
                 txtBenchmarkNumber.Enabled = false;
-            }
 
             if (t.Speed.Contains("%conc"))
-            {
                 txtBenchmarkConcurrency.Enabled = true;
-            }
             else
-            {
                 txtBenchmarkConcurrency.Enabled = false;
-            }
 
             if (t.Time.Contains("%time"))
-            {
                 txtBenchmarkDuration.Enabled = true;
-            }
             else
-            {
                 txtBenchmarkDuration.Enabled = false;
-            }
 
-            cboBenchmarkTool.SelectedIndex = ((ComboBox)(sender)).SelectedIndex;
-            cboBenchmarkTool2.SelectedIndex = ((ComboBox)(sender)).SelectedIndex;
-            cboBenchmarkTool3.SelectedIndex = ((ComboBox)(sender)).SelectedIndex;
+            cboBenchmarkTool.SelectedIndex = ((ComboBox)sender).SelectedIndex;
+            cboBenchmarkTool2.SelectedIndex = ((ComboBox)sender).SelectedIndex;
+            cboBenchmarkTool3.SelectedIndex = ((ComboBox)sender).SelectedIndex;
         }
     }
 }

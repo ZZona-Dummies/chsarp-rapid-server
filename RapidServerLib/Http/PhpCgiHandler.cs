@@ -34,7 +34,7 @@ namespace RapidServer.Http
             p.StartInfo.EnvironmentVariables.Add("SERVER_SOFTWARE", "Rapid Server");
             p.StartInfo.EnvironmentVariables.Add("SERVER_ADDR", hostParts[0]);
             //  set the SERVER_PORT if it's available:
-            if ((hostParts.Length > 1))
+            if (hostParts.Length > 1)
             {
                 p.StartInfo.EnvironmentVariables.Add("SERVER_PORT", hostParts[1]);
             }
@@ -46,7 +46,7 @@ namespace RapidServer.Http
             }
 
             //  if its an http post, set the content_length and content_type headers:
-            if ((req.Method == "POST"))
+            if (req.Method == "POST")
             {
                 p.StartInfo.EnvironmentVariables.Add("CONTENT_LENGTH", req.ContentLength);
                 p.StartInfo.EnvironmentVariables.Add("CONTENT_TYPE", "application/x-www-form-urlencoded");
@@ -62,7 +62,7 @@ namespace RapidServer.Http
             //  start the php process:
             p.Start();
             //  if its an http post, write the post data (aka querystring) to the input stream (aka stdin):
-            if ((req.Method == "POST"))
+            if (req.Method == "POST")
             {
                 p.StandardInput.Write(req.ContentString);
                 p.StandardInput.Flush();

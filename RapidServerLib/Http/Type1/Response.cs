@@ -47,22 +47,15 @@ namespace RapidServer.Http.Type1
             ScriptName = req.ScriptName;
             Request = req;
             //  if the request includes a Connection: keep-alive header, we need to add it to the response:
-            if ((req.Headers.ContainsKey("Connection") == true))
-            {
-                if ((req.Headers["Connection"].ToString().ToLower() == "keep-alive"))
-                {
-                    Headers["Connection"] = "Keep-Alive";
-                }
-            }
+            if (req.Headers.ContainsKey("Connection") && req.Headers["Connection"].ToString().ToLower() == "keep-alive")
+                Headers["Connection"] = "Keep-Alive";
 
             //  set the Content-Encoding header to properly represent the requested resource's mimetype:
             if (req.MimeType != null)
             {
                 MimeType = req.MimeType;
-                if ((MimeType.Compress != CompressionMethod.None))
-                {
+                if (MimeType.Compress != CompressionMethod.None)
                     Headers["Content-Encoding"] = Enum.GetName(typeof(CompressionMethod), MimeType.Compress).ToLower();
-                }
             }
 
             //  set any custom response headers defined in the config file:
@@ -95,7 +88,7 @@ namespace RapidServer.Http.Type1
                 {
                     if (MimeType != null)
                     {
-                        if ((MimeType.Compress == CompressionMethod.Gzip))
+                        if (MimeType.Compress == CompressionMethod.Gzip)
                         {
                             GZipStream gZip = new GZipStream(ms, CompressionMode.Compress, true);
                             gZip.Write(contentBytes, 0, contentBytes.Length);
@@ -103,7 +96,7 @@ namespace RapidServer.Http.Type1
                             gZip.Close();
                             gZip.Dispose();
                         }
-                        else if ((MimeType.Compress == CompressionMethod.Deflate))
+                        else if (MimeType.Compress == CompressionMethod.Deflate)
                         {
                             DeflateStream deflate = new DeflateStream(ms, CompressionMode.Compress, true);
                             deflate.Write(contentBytes, 0, contentBytes.Length);

@@ -1,5 +1,6 @@
 ﻿using RapidSever.Enums;
 using System;
+using System.Net.Sockets;
 using static RapidServer.Globals;
 using Net = System.Net;
 
@@ -15,7 +16,7 @@ namespace RapidServer.Http.Type1
 
         public int ReceiveBufferSize = 4096;
 
-        private Net.Sockets.Socket _clientSocket;
+        private Socket _clientSocket;
 
         private string _request;
 
@@ -23,17 +24,17 @@ namespace RapidServer.Http.Type1
 
         private bool _keepAlive;
 
-        private event EventHandler HandleResponse;
+        public event EventHandler HandleResponse;
 
         private string res;
 
         private object state;
 
-        private event EventHandler ConnectSucceeded;
+        public event EventHandler ConnectSucceeded;
 
-        private event EventHandler ConnectFailed;
+        public event EventHandler ConnectFailed;
 
-        private event EventHandler LogMessage;
+        public event EventHandler LogMessage;
 
         private string message;
 
@@ -89,7 +90,7 @@ namespace RapidServer.Http.Type1
             int port = req.Port;
             //  create endpoint
             Net.IPEndPoint endPoint = AddressToEndpoint(ip, port);
-            _clientSocket = new Net.Sockets.Socket(Net.Sockets.AddressFamily.InterNetwork, Net.Sockets.SocketType.Stream, Net.Sockets.ProtocolType.Tcp);
+            _clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             //  connect to server async
             try
             {
@@ -125,12 +126,12 @@ namespace RapidServer.Http.Type1
             }
 
             //  if the client has connected, proceed
-            if ((connectSuccessful == true))
+            if (connectSuccessful)
             {
                 //  start waiting for messages from the server
                 AsyncReceiveState receiveState = new AsyncReceiveState(ReceiveBufferSize, state);
                 receiveState.Socket = asyncState.Socket;
-                receiveState.Socket.BeginReceive(receiveState.Buffer, 0, ReceiveBufferSize, Net.Sockets.SocketFlags.None, new AsyncCallback(DataReceived), receiveState);
+                receiveState.Socket.BeginReceive(receiveState.Buffer, 0, ReceiveBufferSize, SocketFlags.None, new AsyncCallback(DataReceived), receiveState);
                 //  make a request to the server
                 AsyncSendState sendState = new AsyncSendState(asyncState.Socket, SendBufferSize, state);
                 //  if the path is a directory, ensure it has a trailing /
@@ -150,7 +151,7 @@ namespace RapidServer.Http.Type1
                 reqBytes = System.Text.Encoding.ASCII.GetBytes(reqString);
                 //  send the reqBytes data to the server
                 LogMessage(reqString, null);
-                sendState.Socket.BeginSend(reqBytes, 0, reqBytes.Length, Net.Sockets.SocketFlags.None, new AsyncCallback(DataSent), sendState);
+                sendState.Socket.BeginSend(reqBytes, 0, reqBytes.Length, SocketFlags.None, new AsyncCallback(DataSent), sendState);
             }
         }
 
@@ -193,7 +194,7 @@ namespace RapidServer.Http.Type1
             //  if we haven't determined the Content-Length yet, try doing so now by attempting to extract it from the responseChunk:
             //  TODO: this halts on an error when we try a random URL.
             //  TODO: we need to handle the various transfer types here...check for chunked encoding and parse the size etc...
-            if ((asyncState.ReceiveSize == 0))
+            if (asyncState.ReceiveSize == 0)
             {
                 string contentLength = "";
                 //string transferEncoding = "";
@@ -202,7 +203,7 @@ namespace RapidServer.Http.Type1
             }
 
             //  if we haven't determined the Content offset yet, try doing so now. content is located after the header and two newlines (crlf) which is 4 bytes.
-            if ((asyncState.ContentOffset == 0))
+            if (asyncState.ContentOffset == 0)
             {
                 int contentOffset;
                 contentOffset = (responseChunk.IndexOf(Environment.NewLine + Environment.NewLine) + 4);
@@ -212,15 +213,14 @@ namespace RapidServer.Http.Type1
             //  add the responseChunk's length to the total received bytes count:
             asyncState.TotalBytesReceived = (asyncState.TotalBytesReceived + responseChunk.Length);
             //  if we haven't received all the bytes yet, issue another BeginReceive, otherwise we have all the data so we handle the response
-            if (((asyncState.TotalBytesReceived - asyncState.ContentOffset)
-                        < asyncState.ReceiveSize))
+            if (asyncState.TotalBytesReceived - asyncState.ContentOffset < asyncState.ReceiveSize)
             {
                 AsyncReceiveState receiveState = new AsyncReceiveState(ReceiveBufferSize, asyncState.State);
                 receiveState.Socket = asyncState.Socket;
                 receiveState.Packet = responseString;
                 receiveState.ReceiveSize = asyncState.ReceiveSize;
                 receiveState.TotalBytesReceived = asyncState.TotalBytesReceived;
-                receiveState.Socket.BeginReceive(receiveState.Buffer, 0, ReceiveBufferSize, Net.Sockets.SocketFlags.None, new AsyncCallback(DataReceived), receiveState);
+                receiveState.Socket.BeginReceive(receiveState.Buffer, 0, ReceiveBufferSize, SocketFlags.None, new AsyncCallback(DataReceived), receiveState);
             }
             else
                 HandleResponse(responseString, (EventArgs)asyncState.State);

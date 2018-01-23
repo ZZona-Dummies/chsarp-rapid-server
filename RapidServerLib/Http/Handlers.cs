@@ -18,12 +18,12 @@ namespace RapidServer.Http
             _handlers.Add(h.Name, h);
         }
 
-        private Handler this[int index]
+        public Handler this[int index]
         {
             get => ((Handler)(from DictionaryEntry entry in _handlers.Values select entry.Key).Skip(index).FirstOrDefault()); //(_handlers.Values.ElementAt(index)));
         }
 
-        private Handler this[string name]
+        public Handler this[string name]
         {
             get => ((Handler)(_handlers[name]));
         }

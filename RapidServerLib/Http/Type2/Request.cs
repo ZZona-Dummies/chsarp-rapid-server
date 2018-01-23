@@ -72,7 +72,7 @@ namespace RapidServer.Http.Type2
             Uri = ((string)httpRequestLine).Substring(4, (((string)httpRequestLine).Length - 13)).Replace("/", "\\");
             //  split the uri and query string into their separate components
             int qsIndex = Uri.IndexOf("?");
-            if ((qsIndex != -1))
+            if (qsIndex != -1)
             {
                 QueryString = Uri.Substring(qsIndex);
                 Uri = Uri.Substring(0, qsIndex);
@@ -81,7 +81,7 @@ namespace RapidServer.Http.Type2
             //  determine the absolute path for the requested resource
             AbsoluteUrl = (_server.WebRoot + Uri);
             //  if the client requested a directory, provide a directory listing or prepare to serve up the default document
-            if ((Directory.Exists(AbsoluteUrl) == true))
+            if (Directory.Exists(AbsoluteUrl))
             {
                 foreach (string d in _server.DefaultDocuments)
                 {
@@ -98,7 +98,7 @@ namespace RapidServer.Http.Type2
             FileType = Path.GetExtension(Uri).TrimStart('.');
             //  parse the requested resource's mime type
             MimeType m = (MimeType)_server.MimeTypes[FileType];
-            if ((m == null))
+            if (m == null)
                 m = (MimeType)_server.MimeTypes[""];
 
             MimeType = m;
@@ -106,7 +106,7 @@ namespace RapidServer.Http.Type2
             for (int i = 1; i <= requestStringParts.Length - 2; i++)
             {
                 int delimIndex = requestStringParts[i].IndexOf(": ");
-                if ((delimIndex > 0))
+                if (delimIndex > 0)
                 {
                     string key = requestStringParts[i].Substring(1, (delimIndex - 1));
                     string value = requestStringParts[i].Substring((delimIndex + 2), (requestStringParts[i].Length

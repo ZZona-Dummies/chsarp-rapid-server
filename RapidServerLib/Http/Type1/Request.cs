@@ -78,7 +78,7 @@ namespace RapidServer.Http.Type1
             ParseRequestString(RequestString);
         }
 
-        // Sub New(ByVal buffer() As Byte, ByVal server As Server, ByVal client As Net.Sockets.Socket, ByVal site As Site)
+        // Sub New(ByVal buffer() As Byte, ByVal server As Server, ByVal client As Socket, ByVal site As Site)
         //     MyBase.new()
         //     _server = server
         //     Me.Site = site
@@ -100,8 +100,7 @@ namespace RapidServer.Http.Type1
         {
             //  parse the requestString to build up the request object
             string[] headerStringParts = HeaderString.Split('\n');
-            if ((headerStringParts[0].StartsWith("HEAD")
-                        || (headerStringParts[0].StartsWith("GET") || headerStringParts[0].StartsWith("POST"))))
+            if (headerStringParts[0].StartsWith("HEAD") || headerStringParts[0].StartsWith("GET") || headerStringParts[0].StartsWith("POST"))
             {
                 //  parse the request line
                 RequestLine = headerStringParts[0];
@@ -121,10 +120,10 @@ namespace RapidServer.Http.Type1
 
                 AbsPath = (Site.RootPath + RelPath);
                 //  if the requested path was a directory, use the default document
-                if ((Directory.Exists(AbsPath) == true))
+                if (Directory.Exists(AbsPath))
                 {
                     //  if the requested path was a directory, but the Uri was missing a trailing slash, we need to 301 redirect to the correct Uri
-                    if ((Uri.EndsWith("/") == false))
+                    if (Uri.EndsWith("/"))
                     {
                         FixPath301 = true;
                     }
@@ -149,42 +148,29 @@ namespace RapidServer.Http.Type1
                     // Me.AbsPath = Me.Site.RootPath & Me.RelPath
                 }
                 else
-                {
                     //  not a directory, get filename from abspath
                     FileName = Path.GetFileName(AbsPath);
-                }
 
                 //  TODO: if the directory was empty, Me.FileName will be empty here and we can't proceed with it; serve directory listing or return a 40X status code...
-                if ((FileName != null))
+                if (FileName != null)
                 {
                     //  build the scriptname
                     if (Uri.Contains(FileName))
-                    {
                         ScriptName = Uri;
-                    }
                     else
-                    {
-                        ScriptName = (Uri
-                                    + (FileName + QueryString));
-                    }
+                        ScriptName = Uri + FileName + QueryString;
 
                     //  strip the querystring from the scriptname, causes problems with WP customizer
-                    if ((QueryString != ""))
-                    {
+                    if (QueryString != "")
                         if (ScriptName.Contains(QueryString))
-                        {
                             ScriptName = ScriptName.Replace(QueryString, "");
-                        }
-                    }
 
                     //  parse the requested resource's file type (extension) for use determining the mime type
                     FileType = Path.GetExtension(AbsPath).TrimStart('.');
                     //  parse the requested resource's mime type
                     MimeType m = ((MimeType)(_server.MimeTypes[FileType]));
-                    if ((m == null))
-                    {
+                    if (m == null)
                         m = (MimeType)_server.MimeTypes[""];
-                    }
 
                     MimeType = m;
                     //  set content length

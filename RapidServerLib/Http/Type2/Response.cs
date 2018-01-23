@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.IO;
 using System.IO.Compression;
+using System.Net.Sockets;
 using System.Text;
 using static RapidServer.Globals;
 
@@ -51,22 +52,15 @@ namespace RapidServer.Http.Type2
         { }
 
         //  the number of bytes representing the content
-        public Response(Server server, Request req, Net.Sockets.Socket client)
+        public Response(Server server, Request req, Socket client)
         {
-            if ((req.Headers.ContainsKey("Connection") == true))
-            {
-                if ((req.Headers["Connection"].ToString().ToLower() == "keep-alive"))
-                {
-                    SetHeader("Connection", "keep-alive");
-                }
-            }
+            if (req.Headers.ContainsKey("Connection") && req.Headers["Connection"].ToString().ToLower() == "keep-alive")
+                SetHeader("Connection", "keep-alive");
 
             //  set any headers required by the requested resource's mimetype
             MimeType = req.MimeType;
-            if ((MimeType.Compress != CompressionMethod.None))
-            {
+            if (MimeType.Compress != CompressionMethod.None)
                 SetHeader("Content-Encoding", Enum.GetName(typeof(CompressionMethod), MimeType.Compress).ToLower());
-            }
 
             //  set any custom request headers defined in the config file
             foreach (string s in server.ResponseHeaders)
@@ -74,7 +68,7 @@ namespace RapidServer.Http.Type2
                 // Dim spl() As String = s.Split(": ")
                 // SetHeader(spl(0), spl(1))
                 int delimIndex = s.IndexOf(": ");
-                if ((delimIndex > 0))
+                if (delimIndex > 0)
                 {
                     string key = s.Substring(0, delimIndex);
                     string value = s.Substring((delimIndex + 2), (s.Length
@@ -86,18 +80,12 @@ namespace RapidServer.Http.Type2
 
         public object Content
         {
-            get
-            {
-                return _content;
-            }
+            get => _content;
         }
 
         public object Headers
         {
-            get
-            {
-                return _headers;
-            }
+            get => _headers;
         }
 
         public void SetContent(byte[] contentBytes)
@@ -111,7 +99,7 @@ namespace RapidServer.Http.Type2
             {
                 if (contentBytes != null)
                 {
-                    if ((MimeType.Compress == CompressionMethod.Gzip))
+                    if (MimeType.Compress == CompressionMethod.Gzip)
                     {
                         using (GZipStream gZip = new GZipStream(ms, CompressionMode.Compress, true))
                         {
@@ -120,7 +108,7 @@ namespace RapidServer.Http.Type2
                             gZip.Close();
                         }
                     }
-                    else if ((MimeType.Compress == CompressionMethod.Deflate))
+                    else if (MimeType.Compress == CompressionMethod.Deflate)
                     {
                         using (DeflateStream deflate = new DeflateStream(ms, CompressionMode.Compress, true))
                         {
@@ -130,10 +118,8 @@ namespace RapidServer.Http.Type2
                         }
                     }
                     else
-                    {
                         //  no compression should be used on this resource, write the data as-is (uncompressed or already-compressed)
                         ms.Write(contentBytes, 0, contentBytes.Length);
-                    }
                 }
 
                 mbuf = ms.GetBuffer();

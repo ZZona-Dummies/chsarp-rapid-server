@@ -1,6 +1,7 @@
 ﻿using RapidSever.Enums;
 using System;
 using System.Collections;
+using System.Net.Sockets;
 using static RapidServer.Globals;
 using IO = System.IO;
 using Net = System.Net;
@@ -17,7 +18,7 @@ namespace RapidServer.Http.Type2
     // '' <remarks></remarks>
     public class Server
     {
-        private Net.Sockets.Socket _serverSocket;
+        private Socket _serverSocket;
 
         //private Interops _interops = new Interops();
 
@@ -44,29 +45,29 @@ namespace RapidServer.Http.Type2
         public ArrayList ResponseHeaders = new ArrayList();
 
         //  events - the server should function out-of-box by calling its own events, but these events can also be overridden during implementation for custom handling if desired.
-        private event EventHandler ServerStarted;
+        public event EventHandler ServerStarted;
 
-        private event EventHandler ServerShutdown;
+        public event EventHandler ServerShutdown;
 
-        private event EventHandler HandleRequest;
+        public event EventHandler HandleRequest;
 
         private Request req;
 
         private Response res;
 
-        private Net.Sockets.SocketAsyncEventArgs client;
+        private SocketAsyncEventArgs client;
 
-        private event EventHandler ClientConnecting;
+        public event EventHandler ClientConnecting;
 
-        private Net.Sockets.Socket socket;
+        private Socket socket;
 
         private string head;
 
-        private event EventHandler ClientConnected;
+        public event EventHandler ClientConnected;
 
-        private Net.Sockets.Socket argClientSocket;
+        private Socket argClientSocket;
 
-        private event EventHandler ClientDisconnected;
+        public event EventHandler ClientDisconnected;
 
         // '' <summary>
         // '' Constructs a new HTTP server given a desired web root path.
@@ -128,7 +129,7 @@ namespace RapidServer.Http.Type2
                 DefaultDocuments.Add(n.InnerText);
 
             //  parse the response headers, which let us include certain headers in the http response by default:
-            if (bool.Parse(root["ResponseHeaders"].Attributes["Enabled"].InnerText) == true)
+            if (bool.Parse(root["ResponseHeaders"].Attributes["Enabled"].InnerText))
             {
                 foreach (Xml.XmlNode n in root["ResponseHeaders"])
                     ResponseHeaders.Add(n.InnerText);
@@ -183,11 +184,11 @@ namespace RapidServer.Http.Type2
         {
             //  new async pattern
             _bufferManager.InitBuffer();
-            Net.Sockets.SocketAsyncEventArgs readWriteEventArg = new Net.Sockets.SocketAsyncEventArgs();
+            SocketAsyncEventArgs readWriteEventArg = new SocketAsyncEventArgs();
             //  allocate enough memory in the shared buffer, and enough SocketAsyncEventArgs objects, for the max connections that we wish to support
             for (int i = 0; i <= _maxConnections - 1; ++i)
             {
-                readWriteEventArg = new Net.Sockets.SocketAsyncEventArgs();
+                readWriteEventArg = new SocketAsyncEventArgs();
                 readWriteEventArg.Completed += IoCompleted;
                 readWriteEventArg.UserToken = new AsyncUserToken();
                 _bufferManager.SetBuffer(readWriteEventArg);
@@ -195,34 +196,30 @@ namespace RapidServer.Http.Type2
             }
 
             Net.IPEndPoint endPoint = AddressToEndpoint(Ip, Port);
-            _serverSocket = new Net.Sockets.Socket(endPoint.AddressFamily, Net.Sockets.SocketType.Stream, Net.Sockets.ProtocolType.Tcp);
+            _serverSocket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
             _serverSocket.Bind(endPoint);
             _serverSocket.Listen(20000);
             StartAccept(null);
             ServerStarted(null, null);
         }
 
-        private void StartAccept(Net.Sockets.SocketAsyncEventArgs acceptEventArg)
+        private void StartAccept(SocketAsyncEventArgs acceptEventArg)
         {
-            if ((acceptEventArg == null))
+            if (acceptEventArg == null)
             {
-                acceptEventArg = new Net.Sockets.SocketAsyncEventArgs();
+                acceptEventArg = new SocketAsyncEventArgs();
                 acceptEventArg.Completed += AcceptEventArgCompleted;
             }
             else
-            {
                 acceptEventArg.AcceptSocket = null;
-            }
 
             _maxNumberAcceptedClients.WaitOne();
             bool willRaiseEvent = _serverSocket.AcceptAsync(acceptEventArg);
-            if ((willRaiseEvent == false))
-            {
+            if (willRaiseEvent)
                 ProcessAccept(acceptEventArg);
-            }
         }
 
-        private void AcceptEventArgCompleted(object sender, Net.Sockets.SocketAsyncEventArgs e)
+        private void AcceptEventArgCompleted(object sender, SocketAsyncEventArgs e)
         {
             ProcessAccept(e);
         }
@@ -232,33 +229,31 @@ namespace RapidServer.Http.Type2
         // '' </summary>
         // '' <param name="e"></param>
         // '' <remarks></remarks>
-        private void ProcessAccept(Net.Sockets.SocketAsyncEventArgs e)
+        private void ProcessAccept(SocketAsyncEventArgs e)
         {
             Threading.Interlocked.Increment(ref _numConnections);
-            Net.Sockets.SocketAsyncEventArgs readEventArgs = _readWritePool.Pop;
+            SocketAsyncEventArgs readEventArgs = _readWritePool.Pop;
             ((AsyncUserToken)readEventArgs.UserToken).Socket = e.AcceptSocket;
             bool willRaiseEvent = e.AcceptSocket.ReceiveAsync(readEventArgs);
             if (!willRaiseEvent)
-            {
                 ProcessReceive(readEventArgs);
-                //  NEVER GETS CALLED...due to keep-alive?
-            }
+            //  NEVER GETS CALLED...due to keep-alive?
 
             //  accept the next incoming client connection
             StartAccept(e);
             //  maybe move this up higher in the method
         }
 
-        private void IoCompleted(object sender, Net.Sockets.SocketAsyncEventArgs e)
+        private void IoCompleted(object sender, SocketAsyncEventArgs e)
         {
             string s = Text.Encoding.UTF8.GetString(e.Buffer, e.Offset, e.BytesTransferred);
             switch (e.LastOperation)
             {
-                case Net.Sockets.SocketAsyncOperation.Receive:
+                case SocketAsyncOperation.Receive:
                     ProcessReceive(e);
                     break;
 
-                case Net.Sockets.SocketAsyncOperation.Send:
+                case SocketAsyncOperation.Send:
                     ProcessSend(e);
                     break;
 
@@ -268,13 +263,12 @@ namespace RapidServer.Http.Type2
             }
         }
 
-        private void ProcessReceive(Net.Sockets.SocketAsyncEventArgs e)
+        private void ProcessReceive(SocketAsyncEventArgs e)
         {
             //  get the client who we are receiving data from
             AsyncUserToken token = (AsyncUserToken)e.UserToken;
             //  handle the received data by parsing it into a request and sending a response in return
-            if (((e.BytesTransferred > 0)
-                        && (e.SocketError == Net.Sockets.SocketError.Success)))
+            if (e.BytesTransferred > 0 && e.SocketError == SocketError.Success)
             {
                 Threading.Interlocked.Add(ref _totalBytesRead, e.BytesTransferred);
                 //  place the received data into the shared buffer to avoid frequent memory allocations as we process it
@@ -322,18 +316,16 @@ namespace RapidServer.Http.Type2
                 // End If
             }
             else
-            {
                 CloseClientSocket(e);
-            }
         }
 
-        private void ProcessSend(Net.Sockets.SocketAsyncEventArgs e)
+        private void ProcessSend(SocketAsyncEventArgs e)
         {
-            if ((e.SocketError == Net.Sockets.SocketError.Success))
+            if (e.SocketError == SocketError.Success)
             {
                 AsyncUserToken token = (AsyncUserToken)e.UserToken;
                 // ' TODO: LEFT OFF HERE
-                // Dim x As Net.Sockets.SocketAsyncEventArgs = _readWritePool.Pop
+                // Dim x As SocketAsyncEventArgs = _readWritePool.Pop
                 // x.UserToken = token
                 // Dim willRaiseEvent As Boolean = token.Socket.ReceiveAsync(e)
                 CloseClientSocket(e);
@@ -342,9 +334,7 @@ namespace RapidServer.Http.Type2
                 // End If
             }
             else
-            {
                 CloseClientSocket(e);
-            }
         }
 
         // '' <summary>
@@ -359,7 +349,7 @@ namespace RapidServer.Http.Type2
             //  TODO: here we construct a response, but when serving a response from the output cache we shouldn't construct one at all!
             Response res = new Response(this, req, o.clientSocket);
             //  raise an event to handle the request/response cycle (this can be overridden during implementation to allow for custom handling)
-            _HandleRequest(req, res, o.e); //Handles ... ???
+            HandleRequest(new Tuple<object, object, object>(req, res, o.e), null); //Handles ... ???
         }
 
         // '' <summary>
@@ -369,10 +359,10 @@ namespace RapidServer.Http.Type2
         // '' <param name="res"></param>
         // '' <param name="client"></param>
         // '' <remarks></remarks>
-        private void _HandleRequest(Request req, Response res, Net.Sockets.SocketAsyncEventArgs client)
+        private void _HandleRequest(Request req, Response res, SocketAsyncEventArgs client)
         {
             //  serve the requested resource from the output cache or from disk; better yet, store the entire response and serve that up to save some time
-            if ((OutputCache.ContainsKey(req.AbsoluteUrl) == true))
+            if (OutputCache.ContainsKey(req.AbsoluteUrl))
             {
                 Response cachedResponse = (Response)OutputCache[req.AbsoluteUrl];
                 res = cachedResponse;
@@ -384,11 +374,11 @@ namespace RapidServer.Http.Type2
             {
                 //  serve the file from disk
                 //  TODO: depending on TransferMethod requested by the client, we should implement StoreAndForward or ChunkedEncoding, but for now we will just use StoreAndForward
-                if ((IO.File.Exists(req.AbsoluteUrl) == true))
+                if (IO.File.Exists(req.AbsoluteUrl))
                 {
                     //  determine how to the process the client's request based on the requested uri's file type
                     //  this is where we might load a resourince, maybe using Interops to parse dynamic scripts (e.g. PHP and ASP.NET)
-                    if ((req.MimeType.Handler == ""))
+                    if (req.MimeType.Handler == "")
                     {
                         //  no custom handler for this mimetype, serve as a static file
                         res.ContentType = req.MimeType.Name;
@@ -406,20 +396,16 @@ namespace RapidServer.Http.Type2
                     }
 
                     //  cache the response for future use to improve performance, avoiding the need to process the same response frequently
-                    if ((OutputCache.ContainsKey(req.AbsoluteUrl) == false))
-                    {
+                    if (OutputCache.ContainsKey(req.AbsoluteUrl))
                         OutputCache.Add(req.AbsoluteUrl, res);
-                    }
                     else
-                    {
                         //  page not found, return 404 status code
                         res.StatusCode = 404;
-                    }
                 }
 
                 //  send the response to the client who made the initial request
                 byte[] responseBytes = res.GetResponseBytes();
-                // Dim sendEventArg As Net.Sockets.SocketAsyncEventArgs = _readWritePool.Pop
+                // Dim sendEventArg As SocketAsyncEventArgs = _readWritePool.Pop
                 // Dim ar As AsyncUserToken = client
                 // sendEventArg.UserToken = ar
                 // sendEventArg.SetBuffer(responseBytes, 0, responseBytes.Length)
@@ -427,16 +413,14 @@ namespace RapidServer.Http.Type2
                 AsyncUserToken token = (AsyncUserToken)client.UserToken;
                 bool willRaiseEvent = token.Socket.SendAsync(client);
                 if (!willRaiseEvent)
-                {
                     //  TODO: this never fires!! why not?
                     Beep();
-                }
 
                 //  handle keep-alive or disconnect
                 if (res.Headers["Connection"] == "keep-alive")
                 {
                     //  receive more from the client
-                    // Dim readEventArgs As Net.Sockets.SocketAsyncEventArgs = _readWritePool.Pop
+                    // Dim readEventArgs As SocketAsyncEventArgs = _readWritePool.Pop
                     // token.Socket.ReceiveAsync(readEventArgs)
                 }
                 else
@@ -454,7 +438,7 @@ namespace RapidServer.Http.Type2
                 //     sendState.Persistent = True
                 // End If
                 // Try
-                //     client.BeginSend(responseBytes, 0, responseBytes.Length, Net.Sockets.SocketFlags.None, AddressOf CompleteSend, sendState)
+                //     client.BeginSend(responseBytes, 0, responseBytes.Length, SocketFlags.None, AddressOf CompleteSend, sendState)
                 // Catch ex As Exception
                 //     LogEvent("Could not send data to this client. An unhandled exception occurred.", LogEventType.UsageMessage, "ClientRequest", ex.Message)
                 // End Try
@@ -463,7 +447,7 @@ namespace RapidServer.Http.Type2
                 //     Dim receiveState As New AsyncReceiveState
                 //     receiveState.Socket = client
                 //     Try
-                //         receiveState.Socket.BeginReceive(receiveState.Buffer, 0, gBufferSize, Net.Sockets.SocketFlags.None, New AsyncCallback(AddressOf CompleteRequest), receiveState)
+                //         receiveState.Socket.BeginReceive(receiveState.Buffer, 0, gBufferSize, SocketFlags.None, New AsyncCallback(AddressOf CompleteRequest), receiveState)
                 //     Catch ex As Exception
                 //         LogEvent("Could not receive more data from this client. An unhandled exception occurred.", LogEventType.UsageMessage, "ClientRequest", ex.Message)
                 //     End Try
@@ -471,12 +455,12 @@ namespace RapidServer.Http.Type2
             }
         }
 
-        private void CloseClientSocket(Net.Sockets.SocketAsyncEventArgs e)
+        private void CloseClientSocket(SocketAsyncEventArgs e)
         {
             AsyncUserToken token = (AsyncUserToken)e.UserToken;
             try
             {
-                token.Socket.Shutdown(Net.Sockets.SocketShutdown.Send);
+                token.Socket.Shutdown(SocketShutdown.Send);
             }
             catch (Exception ex)
             {
@@ -498,7 +482,7 @@ namespace RapidServer.Http.Type2
             try
             {
                 //  try to safely shutdown first, allowing pending transmissions to finish which helps prevent prevent data loss
-                _serverSocket.Shutdown(Net.Sockets.SocketShutdown.Both);
+                _serverSocket.Shutdown(SocketShutdown.Both);
             }
             catch (Exception ex)
             {
@@ -515,9 +499,9 @@ namespace RapidServer.Http.Type2
 
             public Server server;
 
-            public Net.Sockets.Socket clientSocket;
+            public Socket clientSocket;
 
-            public Net.Sockets.SocketAsyncEventArgs e;
+            public SocketAsyncEventArgs e;
         }
     }
 }

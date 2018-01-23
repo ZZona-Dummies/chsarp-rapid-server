@@ -8,6 +8,7 @@
 using RapidSever.Enums;
 using System;
 using System.Diagnostics;
+using System.Net.Sockets;
 using IO = System.IO;
 using Net = System.Net;
 using Xml = System.Xml;
@@ -58,7 +59,7 @@ namespace RapidServer
             string[] spl;
             string[] parts = new string[2];
             spl = input.Split(delimiter[0]);
-            if ((trim == true))
+            if (trim)
             {
                 for (int i = 0; i <= spl.Length - 1; i++)
                     spl[i] = spl[i].Trim();
@@ -85,9 +86,9 @@ namespace RapidServer
 
         public class AsyncReceiveState
         {
-            public RapidServer.Http.Site Site;
+            public Http.Site Site;
 
-            public Net.Sockets.Socket Socket;
+            public Socket Socket;
 
             public byte[] Buffer;
 
@@ -118,7 +119,7 @@ namespace RapidServer
 
         public class AsyncSendState
         {
-            public Net.Sockets.Socket Socket;
+            public Socket Socket;
 
             public byte[] BytesToSend;
 
@@ -135,7 +136,7 @@ namespace RapidServer
             private AsyncSendState()
             { }
 
-            public AsyncSendState(Net.Sockets.Socket argSocket, int argBufferSize, object argState)
+            public AsyncSendState(Socket argSocket, int argBufferSize, object argState)
             {
                 Socket = argSocket;
                 BufferSize = argBufferSize;
@@ -184,7 +185,7 @@ namespace RapidServer
         //[System.Runtime.CompilerServices.Extension()]
         public static string[] Slice(string s, string firstOccurrenceOf)
         {
-            if ((firstOccurrenceOf == null))
+            if (firstOccurrenceOf == null)
                 return null;
             else
             {
@@ -216,7 +217,7 @@ namespace RapidServer
             int i2;
             i1 = (s.IndexOf(s1) + s1.Length);
             i2 = s.IndexOf(s2, i1);
-            if ((s.Contains(s1) == true))
+            if (s.Contains(s1))
             {
                 ret = s.Substring(i1, (i2 - i1));
             }

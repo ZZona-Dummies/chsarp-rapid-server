@@ -59,14 +59,14 @@ namespace RapidServer.Http
             foreach (string header in headerStringParts)
             {
                 string headerClean = header.Trim();
-                if ((headerClean != ""))
+                if (headerClean != ""))
                 {
                     if (headerClean.Contains(":"))
                     {
                         int pos = headerClean.IndexOf(":");
                         string[] headerParts = SplitFirst(headerClean, ":", true);
                         //  there can be multiple cookies, can't store them raw in our hashtable so use an arraylist and merge both before sending the response
-                        if ((headerParts[0].ToLower() == "set-cookie"))
+                        if (headerParts[0].ToLower() == "set-cookie"))
                         {
                             SimpleHttpHeader h = new SimpleHttpHeader();
                             h.Key = "Set-Cookie";
@@ -74,16 +74,16 @@ namespace RapidServer.Http
                             Cookies.Add(h);
                         }
 
-                        if ((headerParts[0].ToLower() == "cache-control"))
+                        if (headerParts[0].ToLower() == "cache-control"))
                         {
-                            if ((headerParts[1].ToLower() == "no-cache"))
+                            if (headerParts[1].ToLower() == "no-cache"))
                             {
                                 CacheAllowed = false;
                             }
                         }
 
                         //  only set the same header once
-                        if ((Headers.ContainsKey(headerParts[0]) == false))
+                        if (Headers.ContainsKey(headerParts[0])))
                         {
                             Headers.Add(headerParts[0], headerParts[1]);
                         }

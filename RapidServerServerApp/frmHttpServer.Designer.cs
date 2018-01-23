@@ -1,4 +1,8 @@
-﻿namespace RapidServerServerApp
+﻿using RapidServer.Http.Type1;
+using System;
+using System.Net.Sockets;
+
+namespace RapidServerServerApp
 {
     public partial class frmHttpServer : System.Windows.Forms.Form
     {
@@ -523,7 +527,6 @@
             this.MinimumSize = new System.Drawing.Size(263, 103);
             this.Name = "frmHttpServer";
             this.Text = "Rapid Web Server";
-            this.Load += new System.EventHandler(this.frmHttpServer_Load);
             this.pnlMain.ResumeLayout(false);
             this.tabsMain.ResumeLayout(false);
             this.tabInfo.ResumeLayout(false);
@@ -548,6 +551,34 @@
 
             //Event handlers
             Activated += new System.EventHandler(frmHttpServer_Activated);
+            Load += new System.EventHandler(frmServer_Load);
+
+            btnStart.Click += btnStart_Click;
+            btnStop.Click += btnStop_Click;
+            SpawnClientToolStripMenuItem1.Click += SpawnClientToolStripMenuItem1_Click;
+            KillPhpcgiexeProcessesToolStripMenuItem1.Click += KillPhpcgiexeProcessesToolStripMenuItem1_Click;
+            cboServer.SelectedIndexChanged += ComboBox1_SelectedIndexChanged;
+            LinkLabel1.LinkClicked += LinkLabel1_LinkClicked;
+            LinkLabel2.LinkClicked += LinkLabel2_LinkClicked;
+            chkWrapLog.CheckedChanged += chkWrapAccessLog_CheckedChanged;
+            btnPurgeCache.Click += btnPurgeCache_Click;
+            timPerformance.Tick += timPerformance_Tick;
+            chkEnableLog.CheckedChanged += chkEnableLog_CheckedChanged;
+
+            server.HandleRequest += (obj, b) =>
+            {
+                server_HandleRequest((Request)((Tuple<object, object>)obj).Item1, (Socket)((Tuple<object, object>)obj).Item2);
+            };
+
+            server.ServerShutdown += (a, b) =>
+            {
+                server_ServerShutdown();
+            };
+
+            server.ServerStarted += (a, b) =>
+            {
+                server_ServerStarted();
+            };
         }
 
         internal System.Windows.Forms.Button btnStart;

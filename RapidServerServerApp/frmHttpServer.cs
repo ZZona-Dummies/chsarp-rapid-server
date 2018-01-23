@@ -1,9 +1,10 @@
-﻿using System;
+﻿using RapidServer;
+using RapidServer.Http;
+using System;
 using System.Collections;
 using System.Diagnostics;
+using System.Net.Sockets;
 using System.Windows.Forms;
-using RapidServer;
-using RapidServer.Http;
 
 namespace RapidServerServerApp
 {
@@ -101,7 +102,7 @@ namespace RapidServerServerApp
             cpu.CategoryName = proc.ProcessName;
             cpu.InstanceName = proc.ProcessName;
 
-            for (int i = 1; (i <= 200); i++)
+            for (int i = 1; i <= 200; i++)
             {
                 chartConnections.Series[0].Points.AddXY(0, 0);
                 chartCpu.Series[0].Points.AddXY(0, 0);
@@ -109,9 +110,9 @@ namespace RapidServerServerApp
             }
         }
 
-        private void server_HandleRequest(RapidServer.Http.Type1.Request req, System.Net.Sockets.Socket client)
+        private void server_HandleRequest(RapidServer.Http.Type1.Request req, Socket client)
         {
-            if ((chkEnableLog.Checked == true))
+            if (chkEnableLog.Checked)
             {
                 Invoke(new HandleRequestDelegate(HandleRequest), new object[] {
                         req});
@@ -176,7 +177,7 @@ namespace RapidServerServerApp
 
         private void chkWrapAccessLog_CheckedChanged(object sender, EventArgs e)
         {
-            if ((chkWrapLog.Checked == true))
+            if (chkWrapLog.Checked)
             {
                 txtLog.WordWrap = true;
             }
@@ -195,7 +196,7 @@ namespace RapidServerServerApp
         {
             btnPurgeCache.Text = ("Purge " + server.OutputCache.Count);
             btnStop.Text = ("Stop " + server.ConnectedClients);
-            if ((tabsMain.SelectedTab.Text == "Performance"))
+            if (tabsMain.SelectedTab.Text == "Performance")
             {
                 //  plot the charts
                 double val;
