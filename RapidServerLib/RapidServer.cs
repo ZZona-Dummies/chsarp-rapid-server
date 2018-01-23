@@ -158,7 +158,7 @@ namespace RapidServer
             AsyncReceiveState(int argBufferSize, object argState)
             {
                 //object Buffer;
-                this.State = argState;
+                State = argState;
             }
         }
 
@@ -181,9 +181,9 @@ namespace RapidServer
 
             AsyncSendState(System.Net.Sockets.Socket argSocket, int argBufferSize, object argState)
             {
-                this.Socket = argSocket;
-                this.BufferSize = argBufferSize;
-                this.State = argState;
+                Socket = argSocket;
+                BufferSize = argBufferSize;
+                State = argState;
             }
 
             public int NextOffset()

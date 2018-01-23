@@ -51,7 +51,7 @@ namespace RapidServer.Http.Type1
         void Go(string url, object state)
         {
             //  use uribuilder to format the url:
-            this.Connect(new UriBuilder(url), state);
+            Connect(new UriBuilder(url), state);
         }
 
         string GetHostIP(UriBuilder uri)
@@ -84,7 +84,7 @@ namespace RapidServer.Http.Type1
             //  store the request in a global so we can use it during async callbacks
             _req = req;
             //  extract ip address from _req or _req Url/Host
-            string ip = this.GetHostIP(req);
+            string ip = GetHostIP(req);
             int port = req.Port;
             //  create endpoint
             Net.IPEndPoint endPoint = AddressToEndpoint(ip, port);
@@ -92,7 +92,7 @@ namespace RapidServer.Http.Type1
             //  connect to server async
             try
             {
-                _clientSocket.BeginConnect(endPoint, new AsyncCallback(new System.EventHandler(this.AsyncClientConnected)), new AsyncSendState(_clientSocket, this.SendBufferSize, state));
+                _clientSocket.BeginConnect(endPoint, new AsyncCallback(new System.EventHandler(this.AsyncClientConnected)), new AsyncSendState(_clientSocket, SendBufferSize, state));
             }
             catch (Exception ex)
             {
@@ -217,7 +217,7 @@ namespace RapidServer.Http.Type1
             if (((asyncState.TotalBytesReceived - asyncState.ContentOffset)
                         < asyncState.ReceiveSize))
             {
-                AsyncReceiveState receiveState = new AsyncReceiveState(this.ReceiveBufferSize, asyncState.State);
+                AsyncReceiveState receiveState = new AsyncReceiveState(ReceiveBufferSize, asyncState.State);
                 receiveState.Socket = asyncState.Socket;
                 receiveState.Packet = responseString;
                 receiveState.ReceiveSize = asyncState.ReceiveSize;

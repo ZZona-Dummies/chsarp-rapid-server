@@ -76,16 +76,16 @@
 
         Request(string requestString, Server server, Net.Sockets.Socket client, Site site)
         {
-            this._server = server;
-            this.RequestString = requestString;
-            this.Site = site;
-            this.ClientAddress = client.RemoteEndPoint.ToString;
+            _server = server;
+            RequestString = requestString;
+            Site = site;
+            ClientAddress = client.RemoteEndPoint.ToString;
             //  convert the raw request data into a string and parse it
             // Me.RequestString = System.Text.Encoding.Default.GetString(buffer).Replace(Chr(0), "")
             //  parse raw data into strings
-            this.Parse(this.RequestString);
+            this.Parse(RequestString);
             //  parse strings into strongly typed properties
-            this.ParseRequestString(this.RequestString);
+            ParseRequestString(RequestString);
         }
 
         // Sub New(ByVal buffer() As Byte, ByVal server As Server, ByVal client As Net.Sockets.Socket, ByVal site As Site)
@@ -109,34 +109,34 @@
         void ParseRequestString(string requestString)
         {
             //  parse the requestString to build up the request object
-            string[] headerStringParts = this.HeaderString.Split("\r\n");
+            string[] headerStringParts = HeaderString.Split("\r\n");
             if ((headerStringParts[0].StartsWith("HEAD")
                         || (headerStringParts[0].StartsWith("GET") || headerStringParts[0].StartsWith("POST"))))
             {
                 //  parse the request line
-                this.RequestLine = headerStringParts[0];
+                RequestLine = headerStringParts[0];
                 string[] requestLineParts;
-                requestLineParts = this.RequestLine.Split(" ");
-                this.Method = requestLineParts[0];
-                this.Uri = requestLineParts[1];
-                this.Protocol = requestLineParts[2];
+                requestLineParts = RequestLine.Split(" ");
+                Method = requestLineParts[0];
+                Uri = requestLineParts[1];
+                Protocol = requestLineParts[2];
                 //  build the relative and absolute path to the file
-                this.RelPath = this.Uri.Replace("/", "\\");
-                if (this.Uri.Contains("?"))
+                RelPath = Uri.Replace("/", "\\");
+                if (Uri.Contains("?"))
                 {
-                    string[] uriParts = this.Uri.Split("?");
-                    this.RelPath = uriParts[0].Replace("/", "\\");
-                    this.QueryString = ("?" + uriParts[1]);
+                    string[] uriParts = Uri.Split("?");
+                    RelPath = uriParts[0].Replace("/", "\\");
+                    QueryString = ("?" + uriParts[1]);
                 }
 
-                this.AbsPath = (this.Site.RootPath + this.RelPath);
+                AbsPath = (Site.RootPath + RelPath);
                 //  if the requested path was a directory, use the default document
-                if ((IO.Directory.Exists(this.AbsPath) == true))
+                if ((IO.Directory.Exists(AbsPath) == true))
                 {
                     //  if the requested path was a directory, but the Uri was missing a trailing slash, we need to 301 redirect to the correct Uri
-                    if ((this.Uri.EndsWith("/") == false))
+                    if ((Uri.EndsWith("/") == false))
                     {
-                        this.FixPath301 = true;
+                        FixPath301 = true;
                     }
 
                     //  build the paths to the requested resource
@@ -144,12 +144,12 @@
                     //    however, we are already caching responses and we should skip this function for cached responses which we are not currently doing since we parse before handling cache...
                     foreach (string doc in _server.DefaultDocuments)
                     {
-                        if (IO.File.Exists((this.Site.RootPath
-                                        + (this.RelPath + ("\\" + doc)))))
+                        if (IO.File.Exists((Site.RootPath
+                                        + (RelPath + ("\\" + doc)))))
                         {
-                            this.FileName = doc;
-                            this.RelPath = (this.RelPath + ("\\" + this.FileName));
-                            this.AbsPath = (this.Site.RootPath + this.RelPath);
+                            FileName = doc;
+                            RelPath = (RelPath + ("\\" + FileName));
+                            AbsPath = (Site.RootPath + RelPath);
                             break;
                         }
 
@@ -162,35 +162,35 @@
                 else
                 {
                     //  not a directory, get filename from abspath
-                    this.FileName = IO.Path.GetFileName(this.AbsPath);
+                    FileName = IO.Path.GetFileName(AbsPath);
                 }
 
                 //  TODO: if the directory was empty, Me.FileName will be empty here and we can't proceed with it; serve directory listing or return a 40X status code...
-                if ((this.FileName != null))
+                if ((FileName != null))
                 {
                     //  build the scriptname
-                    if (this.Uri.Contains(this.FileName))
+                    if (Uri.Contains(FileName))
                     {
-                        this.ScriptName = this.Uri;
+                        ScriptName = Uri;
                     }
                     else
                     {
-                        this.ScriptName = (this.Uri
-                                    + (this.FileName + this.QueryString));
+                        ScriptName = (Uri
+                                    + (FileName + QueryString));
                     }
 
                     //  strip the querystring from the scriptname, causes problems with WP customizer
-                    if ((this.QueryString != ""))
+                    if ((QueryString != ""))
                     {
-                        if (this.ScriptName.Contains(this.QueryString))
+                        if (ScriptName.Contains(QueryString))
                         {
-                            this.ScriptName = this.ScriptName.Replace(this.QueryString, "");
+                            ScriptName = ScriptName.Replace(QueryString, "");
                         }
 
                     }
 
                     //  parse the requested resource's file type (extension) for use determining the mime type
-                    this.FileType = IO.Path.GetExtension(this.AbsPath).TrimStart(((char)(".")));
+                    FileType = IO.Path.GetExtension(AbsPath).TrimStart(((char)(".")));
                     //  parse the requested resource's mime type
                     MimeType m = ((MimeType)(_server.MimeTypes(FileType)));
                     if ((m == null))
@@ -198,11 +198,11 @@
                         m = ((MimeType)(_server.MimeTypes("")));
                     }
 
-                    this.MimeType = m;
+                    MimeType = m;
                     //  set content length
-                    this.ContentLength = this.ContentStringLength;
+                    ContentLength = ContentStringLength;
                     //  set the content bytes
-                    this.Content = Text.Encoding.ASCII.GetBytes(this.ContentString);
+                    Content = Text.Encoding.ASCII.GetBytes(ContentString);
                 }
 
             }
@@ -244,8 +244,8 @@
 
         Response(Server server, Request req, Net.Sockets.Socket client)
         {
-            this.ScriptName = req.ScriptName;
-            this.Request = req;
+            ScriptName = req.ScriptName;
+            Request = req;
             //  if the request includes a Connection: keep-alive header, we need to add it to the response:
             if ((req.Headers.ContainsKey("Connection") == true))
             {
@@ -261,10 +261,10 @@
             {
                 IsNot;
                 null;
-                this.MimeType = req.MimeType;
-                if ((this.MimeType.Compress != CompressionMethod.None))
+                MimeType = req.MimeType;
+                if ((MimeType.Compress != CompressionMethod.None))
                 {
-                    this.Headers("Content-Encoding") = Enum.GetName(typeof(CompressionMethod), this.MimeType.Compress).ToLower;
+                    this.Headers("Content-Encoding") = Enum.GetName(typeof(CompressionMethod), MimeType.Compress).ToLower;
                 }
 
             }
@@ -294,11 +294,11 @@
             {
                 IsNot;
                 null;
-                if (this.MimeType)
+                if (MimeType)
                 {
                     IsNot;
                     null;
-                    if ((this.MimeType.Compress == CompressionMethod.Gzip))
+                    if ((MimeType.Compress == CompressionMethod.Gzip))
                     {
                         System.IO.Compression.GZipStream gZip = new System.IO.Compression.GZipStream(ms, IO.Compression.CompressionMode.Compress, true);
                         gZip.Write(contentBytes, 0, contentBytes.Length);
@@ -306,7 +306,7 @@
                         gZip.Close();
                         gZip.Dispose();
                     }
-                    else if ((this.MimeType.Compress == CompressionMethod.Deflate))
+                    else if ((MimeType.Compress == CompressionMethod.Deflate))
                     {
                         System.IO.Compression.DeflateStream deflate = new System.IO.Compression.DeflateStream(ms, IO.Compression.CompressionMode.Compress, true);
                         deflate.Write(contentBytes, 0, contentBytes.Length);
@@ -335,29 +335,29 @@
             ms.Close();
             ms.Dispose();
             Buffer.BlockCopy(mbuf, 0, cbuf, 0, cbuf.Length);
-            this.ContentLength = cbuf.Length.ToString;
+            ContentLength = cbuf.Length.ToString;
             _content = cbuf;
         }
 
         void SetContent(string contentString)
         {
             //  just pass the string as bytes to the primary SetContent method
-            this.SetContent(System.Text.Encoding.UTF8.GetBytes(contentString));
+            SetContent(System.Text.Encoding.UTF8.GetBytes(contentString));
         }
 
         string BuildHeaderString()
         {
             string s = "";
             ("HTTP/1.1 "
-                        + (this.StatusCode + (" "
-                        + (this.StatusCodeMessage() + "\r\n"))));
+                        + (StatusCode + (" "
+                        + (StatusCodeMessage() + "\r\n"))));
             ("Content-Length: "
-                        + (this.ContentLength + "\r\n"));
+                        + (ContentLength + "\r\n"));
             ("Content-Type: "
-                        + (this.ContentType + "\r\n"));
+                        + (ContentType + "\r\n"));
             // s &= "Date: " & DateTime.Now.ToString("r") & vbCrLf ' TODO: high cost detected in profiler...reimplement using a faster date method
             //  append the headers that have been dynamically or conditionally set (request headers, compression, etc)
-            foreach (string h in this.Headers.Keys)
+            foreach (string h in Headers.Keys)
             {
                 (h + (": "
                             + (this.Headers(h).ToString + "\r\n")));
@@ -370,7 +370,7 @@
         string BuildCookieString()
         {
             string s = "";
-            foreach (SimpleHttpHeader h in this.Cookies)
+            foreach (SimpleHttpHeader h in Cookies)
             {
                 (h.Key + (": "
                             + (h.Value + "\r\n")));

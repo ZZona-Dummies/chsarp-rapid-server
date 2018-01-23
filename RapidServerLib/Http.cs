@@ -94,18 +94,18 @@ namespace RapidServer.Http
                 headerPart.Append(payload, 0, i);
                 contentPart = payload.Substring((i + 4), (payload.Length
                                 - (i - 4)));
-                this.HeaderString = headerPart.ToString();
-                this.ContentString = contentPart;
+                HeaderString = headerPart.ToString();
+                ContentString = contentPart;
                 //  TODO: also parse headers from Request Body (for certain POST requests)
-                this.ContentStringLength = contentPart.Length.ToString();
-                this.Content = Text.Encoding.ASCII.GetBytes(this.ContentString);
+                ContentStringLength = contentPart.Length.ToString();
+                Content = Text.Encoding.ASCII.GetBytes(ContentString);
             }
             catch (Exception ex)
             {
                 //  couldn't parse the responseString as expected, probably an error
                 // ErrorMessage = "Could not parse responseString for new SimpleResponse. responseString: " & responseString
                 ErrorMessage = payload;
-                this.Content = Text.Encoding.ASCII.GetBytes(ErrorMessage);
+                Content = Text.Encoding.ASCII.GetBytes(ErrorMessage);
             }
 
             //  parse the header string
@@ -125,22 +125,22 @@ namespace RapidServer.Http
                             SimpleHttpHeader h = new SimpleHttpHeader();
                             h.Key = "Set-Cookie";
                             h.Value = headerParts[1];
-                            this.Cookies.Add(h);
+                            Cookies.Add(h);
                         }
 
                         if ((headerParts[0].ToLower() == "cache-control"))
                         {
                             if ((headerParts[1].ToLower() == "no-cache"))
                             {
-                                this.CacheAllowed = false;
+                                CacheAllowed = false;
                             }
 
                         }
 
                         //  only set the same header once
-                        if ((this.Headers.ContainsKey(headerParts[0]) == false))
+                        if ((Headers.ContainsKey(headerParts[0]) == false))
                         {
-                            this.Headers.Add(headerParts[0], headerParts[1]);
+                            Headers.Add(headerParts[0], headerParts[1]);
                         }
 
                     }
@@ -211,7 +211,7 @@ namespace RapidServer.Http
 
         PhpCgiHandler()
         {
-            this.Name = "PhpCgi";
+            Name = "PhpCgi";
         }
 
         public override string HandleRequest(Http.Type1.Request req)

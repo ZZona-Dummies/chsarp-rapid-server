@@ -98,7 +98,7 @@ namespace RapidServer.Http.Type1
         {
             //  we need to load the config once so Form_Load() can populate the form
             //  TODO: we need to unload and reload the config when the server is stopped and restarted via the form
-            this.LoadConfig();
+            LoadConfig();
         }
 
         // '' <summary>
@@ -114,7 +114,7 @@ namespace RapidServer.Http.Type1
             //    per its known format and then load it.
             if ((IO.File.Exists("http.xml") == false))
             {
-                this.CreateConfig();
+                CreateConfig();
             }
 
             Xml.XmlDocument cfg = new Xml.XmlDocument();
@@ -152,7 +152,7 @@ namespace RapidServer.Http.Type1
                     s.Role = "Standard";
                 }
 
-                this.Sites.Add(s.Title, s);
+                Sites.Add(s.Title, s);
             }
 
             //  parse the basic options:
@@ -296,7 +296,7 @@ namespace RapidServer.Http.Type1
             f.Write(str);
             f.Close();
             f.Dispose();
-            this.LoadConfig();
+            LoadConfig();
         }
 
         // '' <summary>
@@ -326,7 +326,7 @@ namespace RapidServer.Http.Type1
         {
             // LoadConfig()
             //  bind each site to it's address and start listening for client connections
-            foreach (Site s in this.Sites.Values)
+            foreach (Site s in Sites.Values)
             {
                 try
                 {
@@ -363,7 +363,7 @@ namespace RapidServer.Http.Type1
         {
             //  shutdown each site:
             //  TODO: this throws a bunch of exceptions. To test, just Start then Stop.
-            foreach (Site s in this.Sites.Values)
+            foreach (Site s in Sites.Values)
             {
                 try
                 {
@@ -399,7 +399,7 @@ namespace RapidServer.Http.Type1
                 //  accept the client connection, giving us the client socket to work with:
                 clientSocket = s.Socket.EndAccept(ar);
                 //  update the connected client count in a thread safe way
-                Threading.Interlocked.Increment(this.ConnectedClients);
+                Threading.Interlocked.Increment(ConnectedClients);
                 // RaiseEvent ClientConnected(clientSocket)
                 // DebugMessage("Client connected. Total connections: " & _connections, DebugMessageType.UsageMessage, "ClientConnectedAsync")
                 //  begin accepting another client connection:
@@ -418,10 +418,10 @@ namespace RapidServer.Http.Type1
             }
 
             //  begin receiving data (http requests) from the client socket:
-            AsyncReceiveState asyncState = new AsyncReceiveState(this.ReceiveBufferSize, null);
+            AsyncReceiveState asyncState = new AsyncReceiveState(ReceiveBufferSize, null);
             asyncState.Site = s;
             asyncState.Socket = clientSocket;
-            asyncState.Socket.BeginReceive(asyncState.Buffer, 0, this.ReceiveBufferSize, Net.Sockets.SocketFlags.None, new AsyncCallback(new System.EventHandler(this.RequestReceivedAsync)), asyncState);
+            asyncState.Socket.BeginReceive(asyncState.Buffer, 0, ReceiveBufferSize, Net.Sockets.SocketFlags.None, new AsyncCallback(new System.EventHandler(this.RequestReceivedAsync)), asyncState);
         }
 
         // '' <summary>
@@ -447,7 +447,7 @@ namespace RapidServer.Http.Type1
                 {
                     DebugMessage("EndReceive on the client socket failed because the client has disconnected.", DebugMessageType.UsageMessage, "RequestReceivedAsync", ex.Message);
                     //  update the connected client count in a thread safe way
-                    Threading.Interlocked.Decrement(this.ConnectedClients);
+                    Threading.Interlocked.Decrement(ConnectedClients);
                     // RaiseEvent ClientDisconnected(asyncState.Socket)
                     return;
                 }
@@ -459,7 +459,7 @@ namespace RapidServer.Http.Type1
             if ((numBytesReceived == 0))
             {
                 //  update the connected client count in a thread safe way
-                Threading.Interlocked.Decrement(this.ConnectedClients);
+                Threading.Interlocked.Decrement(ConnectedClients);
                 // RaiseEvent ClientDisconnected(asyncState.Socket)
                 return;
             }
@@ -492,14 +492,14 @@ namespace RapidServer.Http.Type1
             //  first try to serve the response from the output cache
             bool servedFromCache = false;
             bool cacheAllowed = true;
-            if ((this.EnableOutputCache == true))
+            if ((EnableOutputCache == true))
             {
                 if ((req.CacheAllowed == true))
                 {
                     if ((OutputCache.ContainsKey((req.AbsPath + req.QueryString)) == true))
                     {
                         Response res = ((Response)(OutputCache[(req.AbsPath + req.QueryString)]));
-                        this.SendResponse(req, res, asyncState.Socket);
+                        SendResponse(req, res, asyncState.Socket);
                         servedFromCache = true;
                         DebugMessage(("Serving resource from cache: "
                                         + (req.AbsPath + ".")), DebugMessageType.UsageMessage, "HandleRequestAsync");
@@ -551,14 +551,14 @@ namespace RapidServer.Http.Type1
             Net.Sockets.Socket client = ps.client;
             Response res = new Response(this, ps.req, ps.client);
             res.ResponseBytes = Text.Encoding.ASCII.GetBytes(responseString);
-            this.TryCache(req, res);
-            this.SendResponse(req, res, client);
+            TryCache(req, res);
+            SendResponse(req, res, client);
         }
 
         //  try to cache the response, if it hasn't already been
         void TryCache(Request req, Response res)
         {
-            if (((this.EnableOutputCache == true)
+            if (((EnableOutputCache == true)
                         && ((req.CacheAllowed == true)
                         && (req.Method != "POST"))))
             {
@@ -623,15 +623,15 @@ namespace RapidServer.Http.Type1
                     //  TODO: ab -n 100000 -c 1000 breaks this if socket reuse = True in SendAsync()
                     //  TODO: caching a POST request (such as WordPress login) breaks stuff, so we should only do it when necessary instead of always...
                     //    https://stackoverflow.com/questions/626057/is-it-possible-to-cache-post-methods-in-http
-                    this.TryCache(req, res);
+                    TryCache(req, res);
                 }
                 else
                 {
                     //  file not found, return directory list or 404:
-                    if (((this.EnableDirectoryListing == true)
+                    if (((EnableDirectoryListing == true)
                                 && IO.Directory.Exists(req.AbsPath)))
                     {
-                        string listing = this.BuildDirectoryListing(req);
+                        string listing = BuildDirectoryListing(req);
                         res.SetContent(Text.Encoding.ASCII.GetBytes(listing));
                         res.Headers.Remove("Connection");
                         //  don't keep-alive for a 404
@@ -651,7 +651,7 @@ namespace RapidServer.Http.Type1
 
             //  the response has been finalized, send it to the client
             res.ResponseBytes = res.BuildResponseBytes;
-            this.SendResponse(req, res, client);
+            SendResponse(req, res, client);
         }
 
         //  builds a directory listing using html for basic navigation
@@ -686,7 +686,7 @@ namespace RapidServer.Http.Type1
         {
             //  convert the response into bytes and package it in an async object for callback purposes:
             // Dim responseBytes() As Byte = res.BuildResponseBytes
-            AsyncSendState sendState = new AsyncSendState(client, this.SendBufferSize, null);
+            AsyncSendState sendState = new AsyncSendState(client, SendBufferSize, null);
             sendState.BytesToSend = res.ResponseBytes;
             sendState.Tag = req.AbsPath;
             //  start sending the response to the client in an async fashion:
@@ -714,7 +714,7 @@ namespace RapidServer.Http.Type1
             //  start receiving more data from the client in an async fashion
             if ((sendState.Persistent == true))
             {
-                AsyncReceiveState receiveState = new AsyncReceiveState(this.ReceiveBufferSize, null);
+                AsyncReceiveState receiveState = new AsyncReceiveState(ReceiveBufferSize, null);
                 receiveState.Site = req.Site;
                 receiveState.Socket = client;
                 try

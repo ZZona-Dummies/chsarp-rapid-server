@@ -7,6 +7,7 @@ using System.Windows.Forms;
 using Xml = System.Xml;
 using IO = System.IO;
 using Text = System.Text;
+using Management = System.Management;
 
 namespace RapidServerClientApp
 {
@@ -33,33 +34,33 @@ namespace RapidServerClientApp
 
         private void client_ConnectFailed()
         {
-            Invoke(new ConnectFailedDelegate(new System.EventHandler(this.ConnectFailed)));
+            Invoke(new ConnectFailedDelegate(new EventHandler(this.ConnectFailed)));
         }
 
         private void client_HandleResponse(string res, object state)
         {
-            Invoke(new HandleResponseDelegate(new System.EventHandler(this.HandleResponse)), res);
+            Invoke(new HandleResponseDelegate(new EventHandler(this.HandleResponse)), res);
         }
 
         private void client_LogMessage(string message)
         {
-            Invoke(new LogMessageDelegate(new System.EventHandler(this.LogMessage)), message);
+            Invoke(new LogMessageDelegate(new EventHandler(this.LogMessage)), message);
         }
 
         //  form load
         private void frmHttpClient_Load(object sender, System.EventArgs e)
         {
             //  load the config
-            this.LoadConfig();
+            LoadConfig();
             //  add the sites
-            foreach (Site s in this.Sites.Values)
+            foreach (Site s in Sites.Values)
             {
                 cboUrl.Items.Add(s.Url);
             }
 
             cboUrl.SelectedItem = cboUrl.Items[0];
             //  add the tools
-            foreach (Tool t in this.Tools.Values)
+            foreach (Tool t in Tools.Values)
             {
                 cboBenchmarkTool.Items.Add(t.Name);
                 cboBenchmarkTool2.Items.Add(t.Name);
@@ -84,7 +85,7 @@ namespace RapidServerClientApp
             //    per its known format and then load it.
             if ((IO.File.Exists("client.xml") == false))
             {
-                this.CreateConfig();
+                CreateConfig();
             }
 
             Xml.XmlDocument cfg = new Xml.XmlDocument();
@@ -104,20 +105,20 @@ namespace RapidServerClientApp
             foreach (Xml.XmlNode n in root["Sites"])
             {
                 Site s = new Site();
-                s.Name = n["Name"].GetValue;
-                s.Description = n["Description"].GetValue;
-                s.Url = n["Url"].GetValue;
-                this.Sites.Add(s.Name, s);
+                s.Name = n["Name"].Value;
+                s.Description = n["Description"].Value;
+                s.Url = n["Url"].Value;
+                Sites.Add(s.Name, s);
             }
 
             //  parse the tools:
             foreach (Xml.XmlNode n in root["Tools"])
             {
                 Tool t = new Tool();
-                t.Name = n["Name"].GetValue;
-                t.Path = n["Path"].GetValue;
-                t.Speed = n["Speed"].GetValue;
-                t.Time = n["Time"].GetValue;
+                t.Name = n["Name"].Value;
+                t.Path = n["Path"].Value;
+                t.Speed = n["Speed"].Value;
+                t.Time = n["Time"].Value;
                 foreach (Xml.XmlNode nn in n["Data"])
                 {
                     if ((nn.Name == "RPS"))
@@ -135,7 +136,7 @@ namespace RapidServerClientApp
 
                 }
 
-                this.Tools.Add(t.Name, t);
+                Tools.Add(t.Name, t);
             }
 
         }
@@ -166,7 +167,7 @@ namespace RapidServerClientApp
                 //  get ram
                 Management.ManagementObjectSearcher wmiram = new Management.ManagementObjectSearcher("SELECT * FROM  Win32_ComputerSystem");
                 object ram = wmiram.Get.Cast(Of, Management.ManagementObject).First;
-                int totalRam = (ram["TotalPhysicalMemory"] / (1024 / (1024 / 1024)));
+                int totalRam = ((int)ram["TotalPhysicalMemory"] / (1024 / (1024 / 1024)));
                 //  print results to chart title
                 Chart1.Titles.Add((osName + (" - "
                                 + (cpuName + (" - "
@@ -186,11 +187,11 @@ namespace RapidServerClientApp
         {
             if ((TabControl3.SelectedTab.Text == "Speed"))
             {
-                this.SpeedBenchmark();
+                SpeedBenchmark();
             }
             else if ((TabControl3.SelectedTab.Text == "Time"))
             {
-                this.TimeBenchmark();
+                TimeBenchmark();
             }
             else
             {
@@ -207,12 +208,12 @@ namespace RapidServerClientApp
             {
                 string ss = "";
                 int i;
-                if ((startTag.ToLower == "vbcrlf"))
+                if ((startTag.ToLower() == Environment.NewLine))
                 {
                     startTag = "\r\n";
                 }
 
-                if ((endTag.ToLower == "vbcrlf"))
+                if ((endTag.ToLower() == Environment.NewLine))
                 {
                     endTag = "\r\n";
                 }
@@ -221,7 +222,7 @@ namespace RapidServerClientApp
                 ss = s.Substring((i + startTag.Length));
                 i = ss.IndexOf(endTag);
                 ss = ss.Substring(0, i);
-                return ss.Trim;
+                return ss.Trim();
             }
             catch (Exception ex)
             {
@@ -240,13 +241,13 @@ namespace RapidServerClientApp
             }
 
             string[,] results;
-            string[] spl = s.Split(",");
+            string[] spl = s.Split(',');
             if ((spl[0] == "stdout"))
             {
                 //  data is in stdout
                 if ((spl[1] == "between"))
                 {
-                    results[0] = this.SubstringBetween(this.stdout, spl[2], spl[3]);
+                    results[0] = SubstringBetween(stdout, spl[2], spl[3]);
                 }
 
             }
@@ -270,17 +271,15 @@ namespace RapidServerClientApp
                 if (spl[3].Contains("+"))
                 {
                     //  the data we want requires a formula rather than a single value
-                    formula = spl[3].Split("+");
+                    formula = spl[3].Split('+');
                     useFormula = true;
                 }
 
                 //  TODO: check if we should read the file as rows or as summary...
                 //  read the file as rows
                 ArrayList lines = new ArrayList();
-                while ((f.Peek != -1))
-                {
-                    lines.Add(f.ReadLine);
-                }
+                while ((f.Peek() != -1))
+                    lines.Add(f.ReadLine());
 
                 f.Close();
                 f.Dispose();
@@ -384,11 +383,11 @@ namespace RapidServerClientApp
 
         void ParseResults(string results)
         {
-            this.stdout = results;
+            stdout = results;
             Tool currentTool = this.Tools(cboBenchmarkTool.Text);
             //  parse it
-            string[] requestsPerSecond = this.ParseAny(currentTool.Data.RPS);
-            string[] completedRequests = this.ParseAny(currentTool.Data.CompletedRequests);
+            string[] requestsPerSecond = ParseAny(currentTool.Data.RPS);
+            string[] completedRequests = ParseAny(currentTool.Data.CompletedRequests);
             // Dim time() As String = ParseAny(currentTool.Data.ResponseTime)
             //  chart it
             bool failedParse = false;
@@ -401,7 +400,7 @@ namespace RapidServerClientApp
             if ((failedParse == false))
             {
                 Site currentSite = null;
-                foreach (Site s in this.Sites.Values)
+                foreach (Site s in Sites.Values)
                 {
                     if ((s.Url == cboUrl.Text))
                     {
@@ -411,10 +410,8 @@ namespace RapidServerClientApp
                 }
 
                 string seriesName = cboUrl.Text;
-                if (currentSite)
+                if (currentSite != null)
                 {
-                    IsNot;
-                    null;
                     seriesName = currentSite.Name;
                     //  update the rps log
                     //  TODO: remove sitename and match text color to legend color
@@ -439,7 +436,7 @@ namespace RapidServerClientApp
                     {
                         //  create the series for this url
                         Chart3.Series.Add(seriesName);
-                        Chart3.Series(seriesName).ChartType = DataVisualization.Charting.SeriesChartType.FastLine;
+                        Chart3.Series(seriesName).ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.FastLine;
                     }
                     else
                     {
@@ -463,29 +460,29 @@ namespace RapidServerClientApp
 
         void TimeBenchmark()
         {
-            Tool t = this.Tools(cboBenchmarkTool.Text);
+            Tool t = (Tool)Tools[cboBenchmarkTool.Text];
             string cmd = t.Time;
             cmd = cmd.Replace("%time", txtBenchmarkDuration.Text);
-            cmd = cmd.Replace("%url", (cboUrl.Text.TrimEnd("/") + "/"));
-            this.LogMessage((t.Path + cmd));
+            cmd = cmd.Replace("%url", (cboUrl.Text.TrimEnd('/') + "/"));
+            LogMessage((t.Path + cmd));
             ManagedProcess p = new ManagedProcess(t.Path, cmd);
-            txtRaw.Text = p.Output.ToString;
-            this.ParseResults(p.Output.ToString);
+            txtRaw.Text = p.Output.ToString();
+            ParseResults(p.Output.ToString());
         }
 
         void SpeedBenchmark()
         {
-            Tool t = this.Tools(cboBenchmarkTool.Text);
+            Tool t = (Tool)Tools[cboBenchmarkTool.Text];
             string cmd = t.Speed;
             cmd = cmd.Replace("%num", txtBenchmarkNumber.Text);
             cmd = cmd.Replace("%conc", txtBenchmarkConcurrency.Text);
-            cmd = cmd.Replace("%url", (cboUrl.Text.TrimEnd("/") + "/"));
-            this.LogMessage((t.Path + cmd));
+            cmd = cmd.Replace("%url", (cboUrl.Text.TrimEnd('/') + "/"));
+            LogMessage((t.Path + cmd));
             ManagedProcess p = new ManagedProcess(t.Path, cmd);
             //  TODO: this throws an exception due to multithreading...
             //    https://stackoverflow.com/questions/24181910/stringbuilder-thread-safety?rq=1
-            txtRaw.Text = p.Output.ToString;
-            this.ParseResults(p.Output.ToString);
+            txtRaw.Text = p.Output.ToString();
+            ParseResults(p.Output.ToString());
         }
 
         //  ramp by increasing concurrency each iteration: http://wiki.dreamhost.com/Web_Server_Performance_Comparison
@@ -498,7 +495,7 @@ namespace RapidServerClientApp
         {
             //  prepare the date
             string clrDate = "";
-            Now.ToString("dd/MMM/yyyy:hh:mm:ss zzz");
+            clrDate = DateTime.Now.ToString("dd/MMM/yyyy:hh:mm:ss zzz");
             clrDate = clrDate.Remove(clrDate.LastIndexOf(":"), 1);
             //  log access events using CLF (combined log format):
             txtLog.AppendText("127.0.0.1");
@@ -508,7 +505,7 @@ namespace RapidServerClientApp
             //  client username - leave null for now
             txtLog.AppendText((" ["
                             + (clrDate + "]")));
-            txtLog.AppendText((" \"" + message.Replace("\r\n", " ").TrimEnd(" ")));
+            txtLog.AppendText((" \"" + message.Replace("\r\n", " ").TrimEnd(' ')));
             txtLog.AppendText("\"");
             txtLog.AppendText("\r\n");
         }
@@ -516,14 +513,14 @@ namespace RapidServerClientApp
         //  connect to server failed (invoked server event)
         void ConnectFailed()
         {
-            txtRaw.Text = ("Could not connect." + "\r\n");
-            ("Could not connect." + "\r\n");
+            txtRaw.Text = "Could not connect." + "\r\n";
+            txtLog.Text += "Could not connect." + "\r\n";
         }
 
         //  response is being handled by the server (invoked server event)
         void HandleResponse(string res)
         {
-            res;
+            txtRaw.Text += res;
         }
 
         private void btnGo_Click(object sender, System.EventArgs e)
@@ -532,7 +529,7 @@ namespace RapidServerClientApp
             txtRaw.Text = "";
             if ((TabControl1.SelectedTab.Text == "Benchmark"))
             {
-                this.RunBenchmark();
+                RunBenchmark();
             }
             else
             {
@@ -566,7 +563,7 @@ namespace RapidServerClientApp
 
         private void btnDetectSystemInfo_Click(object sender, System.EventArgs e)
         {
-            this.DetectSystemInfo();
+            DetectSystemInfo();
         }
 
         private void btnClear_Click(object sender, System.EventArgs e)
@@ -591,7 +588,7 @@ namespace RapidServerClientApp
 
         private void cboBenchmarkTool_SelectedIndexChanged(object sender, System.EventArgs e)
         {
-            Tool t = this.Tools(cboBenchmarkTool.Text);
+            Tool t = (Tool)Tools[cboBenchmarkTool.Text];
             if (t.Speed.Contains("%num"))
             {
                 txtBenchmarkNumber.Enabled = true;
@@ -639,12 +636,12 @@ namespace RapidServerClientApp
         private ManagedProcess()
         { }
 
-        public ManagedProcess(void filename, void commandline)
+        public ManagedProcess(string filename, string commandline)
         {
             //  use a process to run the benchmark tool and read its results
             string results = "";
-            Process p = this.Process;
-            p.OutputDataReceived += new System.EventHandler(this.ReadOutputAsync);
+            Process p = Process;
+            p.OutputDataReceived += new EventHandler(this.ReadOutputAsync);
             p.StartInfo.CreateNoWindow = true;
             p.StartInfo.UseShellExecute = false;
             p.StartInfo.RedirectStandardOutput = true;
@@ -662,7 +659,7 @@ namespace RapidServerClientApp
             }
             catch (Exception ex)
             {
-                this.Output.Append("the tool process failed to run");
+                Output.Append("the tool process failed to run");
             }
 
         }

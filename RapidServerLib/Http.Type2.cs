@@ -78,7 +78,7 @@ namespace RapidServer.Http.Type2
         Server(string rootPath)
         {
             WebRoot = rootPath;
-            this.LoadConfig();
+            LoadConfig();
             const int maxConnections = 10000;
             //  pull this from the config, but for now we just make them usable
             const int receiveBufferSize = 4096;
@@ -206,7 +206,7 @@ namespace RapidServer.Http.Type2
             _serverSocket = new System.Net.Sockets.Socket(endPoint.AddressFamily, Net.Sockets.SocketType.Stream, Net.Sockets.ProtocolType.Tcp);
             _serverSocket.Bind(endPoint);
             _serverSocket.Listen(20000);
-            this.StartAccept(null);
+            StartAccept(null);
             ServerStarted();
         }
 
@@ -226,14 +226,14 @@ namespace RapidServer.Http.Type2
             bool willRaiseEvent = _serverSocket.AcceptAsync(acceptEventArg);
             if ((willRaiseEvent == false))
             {
-                this.ProcessAccept(acceptEventArg);
+                ProcessAccept(acceptEventArg);
             }
 
         }
 
         void AcceptEventArgCompleted(object sender, Net.Sockets.SocketAsyncEventArgs e)
         {
-            this.ProcessAccept(e);
+            ProcessAccept(e);
         }
 
         // '' <summary>
@@ -251,12 +251,12 @@ namespace RapidServer.Http.Type2
             bool willRaiseEvent = e.AcceptSocket.ReceiveAsync(readEventArgs);
             if (!willRaiseEvent)
             {
-                this.ProcessReceive(readEventArgs);
+                ProcessReceive(readEventArgs);
                 //  NEVER GETS CALLED...due to keep-alive?
             }
 
             //  accept the next incoming client connection
-            this.StartAccept(e);
+            StartAccept(e);
             //  maybe move this up higher in the method
         }
 
@@ -266,10 +266,10 @@ namespace RapidServer.Http.Type2
             switch (e.LastOperation)
             {
                 case Net.Sockets.SocketAsyncOperation.Receive:
-                    this.ProcessReceive(e);
+                    ProcessReceive(e);
                     break;
                 case Net.Sockets.SocketAsyncOperation.Send:
-                    this.ProcessSend(e);
+                    ProcessSend(e);
                     break;
                 default:
                     Beep();
@@ -332,7 +332,7 @@ namespace RapidServer.Http.Type2
             }
             else
             {
-                this.CloseClientSocket(e);
+                CloseClientSocket(e);
             }
 
         }
@@ -346,14 +346,14 @@ namespace RapidServer.Http.Type2
                 // Dim x As Net.Sockets.SocketAsyncEventArgs = _readWritePool.Pop
                 // x.UserToken = token
                 // Dim willRaiseEvent As Boolean = token.Socket.ReceiveAsync(e)
-                this.CloseClientSocket(e);
+                CloseClientSocket(e);
                 // If Not willRaiseEvent Then
                 //     ProcessReceive(e)
                 // End If
             }
             else
             {
-                this.CloseClientSocket(e);
+                CloseClientSocket(e);
             }
 
         }
@@ -456,7 +456,7 @@ namespace RapidServer.Http.Type2
                     // token.Socket.Disconnect(False)
                     // token.Socket.Close()
                     //  TODO: maybe move this into the CompleteReceive where we call ReceiveAsync...
-                    this.CloseClientSocket(client);
+                    CloseClientSocket(client);
                 }
 
                 // Dim sendState As New AsyncSendState(client)
@@ -574,14 +574,14 @@ namespace RapidServer.Http.Type2
         Request(string requestString, Server server)
         {
             _server = server;
-            this.ParseRequestString(requestString);
+            ParseRequestString(requestString);
         }
 
         Request(byte[] buffer, Server server)
         {
             _server = server;
             object requestString = System.Text.Encoding.ASCII.GetString(buffer);
-            this.ParseRequestString((string)requestString);
+            ParseRequestString((string)requestString);
         }
 
         // '' <summary>
@@ -597,17 +597,17 @@ namespace RapidServer.Http.Type2
             // requestString.Split(vbNewLine)(0)
             //  parse the uri (including query string) from the request-line
             //  TODO: during a few refreshes, an exception is thrown here because the requestString is fragmented - "36 Accept(-Encoding) : gzip, deflate, sdch Accept-Language: en-US,en;q=0.8
-            this.Uri = ((string)httpRequestLine).Substring(4, (((string)httpRequestLine).Length - 13)).Replace("/", "\\");
+            Uri = ((string)httpRequestLine).Substring(4, (((string)httpRequestLine).Length - 13)).Replace("/", "\\");
             //  split the uri and query string into their separate components
-            int qsIndex = this.Uri.IndexOf("?");
+            int qsIndex = Uri.IndexOf("?");
             if ((qsIndex != -1))
             {
-                QueryString = this.Uri.Substring(qsIndex);
-                this.Uri = this.Uri.Substring(0, qsIndex);
+                QueryString = Uri.Substring(qsIndex);
+                Uri = Uri.Substring(0, qsIndex);
             }
 
             //  determine the absolute path for the requested resource
-            this.AbsoluteUrl = (_server.WebRoot + this.Uri);
+            AbsoluteUrl = (_server.WebRoot + Uri);
             //  if the client requested a directory, provide a directory listing or prepare to serve up the default document
             if ((IO.Directory.Exists(AbsoluteUrl) == true))
             {
@@ -616,7 +616,7 @@ namespace RapidServer.Http.Type2
                     if (IO.File.Exists((_server.WebRoot + ("/" + d))))
                     {
                         d;
-                        this.AbsoluteUrl = (_server.WebRoot + this.Uri);
+                        AbsoluteUrl = (_server.WebRoot + Uri);
                         break;
                     }
 
@@ -625,7 +625,7 @@ namespace RapidServer.Http.Type2
             }
 
             //  parse the requested resource's file type (extension) and path
-            this.FileType = IO.Path.GetExtension(Uri).TrimStart('.');
+            FileType = IO.Path.GetExtension(Uri).TrimStart('.');
             //  parse the requested resource's mime type
             MimeType m = _server.MimeTypes[FileType];
             if ((m == null))
@@ -633,7 +633,7 @@ namespace RapidServer.Http.Type2
                 m = _server.MimeTypes[""];
             }
 
-            this.MimeType = m;
+            MimeType = m;
             //  parse the remaining request headers
             for (int i = 1; i <= (requestStringParts.Length - 2; i++)
             {
@@ -698,7 +698,7 @@ namespace RapidServer.Http.Type2
             {
                 if ((req.Headers["Connection"].ToString().ToLower() == "keep-alive"))
                 {
-                    this.SetHeader("Connection", "keep-alive");
+                    SetHeader("Connection", "keep-alive");
                 }
 
             }
@@ -707,7 +707,7 @@ namespace RapidServer.Http.Type2
             MimeType = req.MimeType;
             if ((MimeType.Compress != CompressionMethod.None))
             {
-                this.SetHeader("Content-Encoding", Enum.GetName(typeof(CompressionMethod), MimeType.Compress).ToLower());
+                SetHeader("Content-Encoding", Enum.GetName(typeof(CompressionMethod), MimeType.Compress).ToLower());
             }
 
             //  set any custom request headers defined in the config file
@@ -721,7 +721,7 @@ namespace RapidServer.Http.Type2
                     string key = s.Substring(0, delimIndex);
                     string value = s.Substring((delimIndex + 2), (s.Length
                                     - (delimIndex - 2)));
-                    this.SetHeader(key, value);
+                    SetHeader(key, value);
                 }
 
             }
@@ -780,14 +780,14 @@ namespace RapidServer.Http.Type2
             ms.Close();
             ms.Dispose();
             Buffer.BlockCopy(mbuf, 0, cbuf, 0, cbuf.Length);
-            this.ContentLength = cbuf.GetLength(0).ToString(); //???
+            ContentLength = cbuf.GetLength(0).ToString(); //???
             _content = cbuf;
         }
 
         void SetContent(string contentString)
         {
             //  just pass the string as bytes to the primary SetContent method
-            this.SetContent(System.Text.Encoding.ASCII.GetBytes(contentString));
+            SetContent(System.Text.Encoding.ASCII.GetBytes(contentString));
         }
 
         void SetHeader(string key, string value)
@@ -802,7 +802,7 @@ namespace RapidServer.Http.Type2
             string s = "";
             ("HTTP/1.1 "
                         + (StatusCode + (" "
-                        + (this.StatusCodeMessage() + "\r\n"))));
+                        + (StatusCodeMessage() + "\r\n"))));
             ("Content-Length: "
                         + (ContentLength + "\r\n"));
             ("Content-Type: "
