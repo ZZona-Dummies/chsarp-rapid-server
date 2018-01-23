@@ -1,13 +1,12 @@
 ﻿using RapidServer.Http.Type1;
+using RapidServerClientApp.Classes;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Management;
 using System.Windows.Forms;
 using IO = System.IO;
-using Text = System.Text;
 using Xml = System.Xml;
 
 namespace RapidServerClientApp
@@ -592,83 +591,5 @@ namespace RapidServerClientApp
             cboBenchmarkTool2.SelectedIndex = ((ComboBox)(sender)).SelectedIndex;
             cboBenchmarkTool3.SelectedIndex = ((ComboBox)(sender)).SelectedIndex;
         }
-    }
-
-    internal class DataPoint
-    {
-        public Hashtable Topics = new Hashtable();
-    }
-
-    internal class ManagedProcess
-    {
-        public Process Process = new Process();
-
-        public Text.StringBuilder Output = new Text.StringBuilder();
-
-        private ManagedProcess()
-        { }
-
-        public ManagedProcess(string filename, string commandline)
-        {
-            //  use a process to run the benchmark tool and read its results
-            //string results = "";
-            Process p = Process;
-            p.OutputDataReceived += ReadOutputAsync;
-            p.StartInfo.CreateNoWindow = true;
-            p.StartInfo.UseShellExecute = false;
-            p.StartInfo.RedirectStandardOutput = true;
-            p.StartInfo.RedirectStandardError = true;
-            p.StartInfo.FileName = filename;
-            p.StartInfo.Arguments = commandline;
-            try
-            {
-                p.Start();
-                p.BeginOutputReadLine();
-                //  TODO: siege -c1000 causes a hang with WaitForExit() and no timeout...
-                p.WaitForExit();
-                // p.Close()
-                // p.Dispose()
-            }
-            catch (Exception ex)
-            {
-                Output.Append("the tool process failed to run");
-            }
-        }
-
-        private void ReadOutputAsync(object sender, DataReceivedEventArgs e)
-        {
-            Output.AppendLine(e.Data);
-        }
-    }
-
-    internal class Site
-    {
-        public string Name;
-
-        public string Description;
-
-        public string Url;
-    }
-
-    internal class Tool
-    {
-        public string Name;
-
-        public string Path;
-
-        public string Speed;
-
-        public string Time;
-
-        public ToolData Data = new ToolData();
-    }
-
-    internal class ToolData
-    {
-        public string RPS;
-
-        public string CompletedRequests;
-
-        public string ResponseTime;
     }
 }

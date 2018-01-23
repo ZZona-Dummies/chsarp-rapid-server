@@ -47,6 +47,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Classes\DataPoint.cs" />
+    <Compile Include="Classes\ManagedProcess.cs" />
+    <Compile Include="Classes\Site.cs" />
+    <Compile Include="Classes\Tool.cs" />
+    <Compile Include="Classes\ToolData.cs" />
     <Compile Include="frmHttpClient.cs">
       <SubType>Form</SubType>
     </Compile>

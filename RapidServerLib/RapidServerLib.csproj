@@ -47,8 +47,10 @@
     <Compile Include="Http\Handlers.cs" />
     <Compile Include="Http\Http.cs" />
     <Compile Include="Http\Type1\Client.cs" />
-    <Compile Include="Http\Type1\Core.cs" />
+    <Compile Include="Http\Type1\HandleRequestObject.cs" />
     <Compile Include="Http\Type1\ProxyState.cs" />
+    <Compile Include="Http\Type1\Request.cs" />
+    <Compile Include="Http\Type1\Response.cs" />
     <Compile Include="Http\Type1\Server.cs" />
     <Compile Include="Http\Type2\BufferManager.cs" />
     <Compile Include="Http\Type2\Request.cs" />
