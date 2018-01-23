@@ -334,7 +334,7 @@ namespace RapidServer.Http.Type1
                     s.Socket = new Net.Sockets.Socket(Net.Sockets.AddressFamily.InterNetwork, Net.Sockets.SocketType.Stream, Net.Sockets.ProtocolType.Tcp);
                     s.Socket.Bind(ep);
                     s.Socket.Listen(20000);
-                    s.Socket.BeginAccept(0, new AsyncCallback(new EventHandler(this.ClientConnectedAsync)), s);
+                    s.Socket.BeginAccept(0, new AsyncCallback(ClientConnectedAsync), s);
                     DebugMessage("Site started...", DebugMessageType.InfoMessage, "StartServer");
                     SiteStarted(null, null);
                 }
@@ -399,11 +399,11 @@ namespace RapidServer.Http.Type1
                 //  accept the client connection, giving us the client socket to work with:
                 clientSocket = s.Socket.EndAccept(ar);
                 //  update the connected client count in a thread safe way
-                Threading.Interlocked.Increment(ConnectedClients);
+                Threading.Interlocked.Increment(ref ConnectedClients);
                 // RaiseEvent ClientConnected(clientSocket)
                 // DebugMessage("Client connected. Total connections: " & _connections, DebugMessageType.UsageMessage, "ClientConnectedAsync")
                 //  begin accepting another client connection:
-                s.Socket.BeginAccept(0, new AsyncCallback(new EventHandler(this.ClientConnectedAsync)), s);
+                s.Socket.BeginAccept(0, new AsyncCallback(ClientConnectedAsync), s);
             }
             catch (ObjectDisposedException ex1)
             {
@@ -421,7 +421,7 @@ namespace RapidServer.Http.Type1
             AsyncReceiveState asyncState = new AsyncReceiveState(ReceiveBufferSize, null);
             asyncState.Site = s;
             asyncState.Socket = clientSocket;
-            asyncState.Socket.BeginReceive(asyncState.Buffer, 0, ReceiveBufferSize, Net.Sockets.SocketFlags.None, new AsyncCallback(new EventHandler(this.RequestReceivedAsync)), asyncState);
+            asyncState.Socket.BeginReceive(asyncState.Buffer, 0, ReceiveBufferSize, Net.Sockets.SocketFlags.None, new AsyncCallback(RequestReceivedAsync), asyncState);
         }
 
         // '' <summary>
@@ -434,7 +434,7 @@ namespace RapidServer.Http.Type1
         {
             //  get the async state object:
             AsyncReceiveState asyncState = ((AsyncReceiveState)(ar.AsyncState));
-            int numBytesReceived;
+            int numBytesReceived = 0;
             try
             {
                 //  call EndReceive which will give us the number of bytes received
@@ -447,7 +447,7 @@ namespace RapidServer.Http.Type1
                 {
                     DebugMessage("EndReceive on the client socket failed because the client has disconnected.", DebugMessageType.UsageMessage, "RequestReceivedAsync", ex.Message);
                     //  update the connected client count in a thread safe way
-                    Threading.Interlocked.Decrement(ConnectedClients);
+                    Threading.Interlocked.Decrement(ref ConnectedClients);
                     // RaiseEvent ClientDisconnected(asyncState.Socket)
                     return;
                 }
@@ -456,10 +456,10 @@ namespace RapidServer.Http.Type1
 
             //  if we get numBytesReceived equal to zero, it could indicate that the client has disconnected
             //  TODO: does this actually disconnect the client though, or just assume it was?
-            if ((numBytesReceived == 0))
+            if (numBytesReceived == 0)
             {
                 //  update the connected client count in a thread safe way
-                Threading.Interlocked.Decrement(ConnectedClients);
+                Threading.Interlocked.Decrement(ref ConnectedClients);
                 // RaiseEvent ClientDisconnected(asyncState.Socket)
                 return;
             }
@@ -468,7 +468,7 @@ namespace RapidServer.Http.Type1
             //    to handle it on a separate ThreadPool thread; it is important that we free up the I/O completion port being 
             //    used for this async operation as soon as possible, therefore we don't even attempt to parse the requestBytes at 
             //    this point and just immediately pass the raw request bytes to a ThreadPool thread for further processing
-            Threading.ThreadPool.QueueUserWorkItem(new EventHandler(this.HandleRequestAsync), asyncState);
+            Threading.ThreadPool.QueueUserWorkItem(new Threading.WaitCallback((o) => { HandleRequestAsync((AsyncReceiveState)o); }), asyncState);
         }
 
         //  handles the request on a separate ThreadPool thread.
@@ -498,7 +498,7 @@ namespace RapidServer.Http.Type1
                 {
                     if ((OutputCache.ContainsKey((req.AbsPath + req.QueryString)) == true))
                     {
-                        Response res = ((Response)(OutputCache[(req.AbsPath + req.QueryString)]));
+                        Response res = OutputCache[(req.AbsPath + req.QueryString)];
                         SendResponse(req, res, asyncState.Socket);
                         servedFromCache = true;
                         DebugMessage(("Serving resource from cache: "
@@ -522,7 +522,7 @@ namespace RapidServer.Http.Type1
                 else if ((asyncState.Site.Role == "Load Balancer"))
                 {
                     //  parse the upstream servers and select one using the defined algorithm
-                    string[] upstreams = asyncState.Site.Upstream.Split(",");
+                    string[] upstreams = asyncState.Site.Upstream.Split(',');
                     Random r = new Random();
                     int i = r.Next(0, upstreams.Length);
                     //  forward the request to the selected upstream server
@@ -546,7 +546,7 @@ namespace RapidServer.Http.Type1
         //  sends the response from the upstream server back to the original client which made the request
         private void Proxy1_HandleResponse(string responseString, object state)
         {
-            ProxyState ps = state;
+            ProxyState ps = (ProxyState)state;
             Request req = ps.req;
             Net.Sockets.Socket client = ps.client;
             Response res = new Response(this, ps.req, ps.client);
@@ -601,7 +601,7 @@ namespace RapidServer.Http.Type1
                         if (res.Headers.ContainsKey("Status"))
                         {
                             //  parse the response code from the Status header:
-                            res.StatusCode = res.Headers("Status").split(" ")[0];
+                            res.StatusCode = ((string)res.Headers["Status"]).Split(' ')[0];
                         }
                         else
                         {
@@ -658,7 +658,7 @@ namespace RapidServer.Http.Type1
         public string BuildDirectoryListing(Request req)
         {
             string listing = "<h1>Directory Listing</h1>";
-            foreach (IO.DirectoryInfo d in (new IO.DirectoryInfo(req.AbsPath) + GetDirectories))
+            foreach (IO.DirectoryInfo d in new IO.DirectoryInfo(req.AbsPath) + GetDirectories)
             {
                 listing += ("<div><a href=\'"
                             + (req.Uri.TrimEnd('/') + ("/"
@@ -666,7 +666,7 @@ namespace RapidServer.Http.Type1
                             + (d.Name + "</a></div>"))))));
             }
 
-            foreach (IO.FileInfo f in (new IO.DirectoryInfo(req.AbsPath) + GetFiles))
+            foreach (IO.FileInfo f in new IO.DirectoryInfo(req.AbsPath) + GetFiles)
             {
                 // Dim ms As New IO.MemoryStream
                 // Dim ico As System.Drawing.Icon
@@ -692,7 +692,7 @@ namespace RapidServer.Http.Type1
             //  start sending the response to the client in an async fashion:
             try
             {
-                client.BeginSend(res.ResponseBytes, 0, res.ResponseBytes.Length, Net.Sockets.SocketFlags.None, new EventHandler(this.SendResponseAsync), sendState);
+                client.BeginSend(res.ResponseBytes, 0, res.ResponseBytes.Length, Net.Sockets.SocketFlags.None, SendResponseAsync, sendState);
             }
             catch (Exception ex)
             {
@@ -704,7 +704,7 @@ namespace RapidServer.Http.Type1
             //  IMPORTANT: for keep-alive connections we should make a final receive call to the client and if the client does not send a Connection: keep-alive header then we know to disconnect
             if ((res.Headers.ContainsKey("Connection") == true))
             {
-                if ((res.Headers("Connection").ToString.ToLower == "keep-alive"))
+                if ((res.Headers["Connection"].ToString().ToLower() == "keep-alive"))
                 {
                     sendState.Persistent = true;
                 }
@@ -719,7 +719,7 @@ namespace RapidServer.Http.Type1
                 receiveState.Socket = client;
                 try
                 {
-                    receiveState.Socket.BeginReceive(receiveState.Buffer, 0, ReceiveBufferSize, Net.Sockets.SocketFlags.None, new AsyncCallback(new EventHandler(this.RequestReceivedAsync)), receiveState);
+                    receiveState.Socket.BeginReceive(receiveState.Buffer, 0, ReceiveBufferSize, Net.Sockets.SocketFlags.None, new AsyncCallback(RequestReceivedAsync), receiveState);
                 }
                 catch (Exception ex)
                 {
@@ -742,14 +742,12 @@ namespace RapidServer.Http.Type1
             {
                 asyncState.Socket.EndSend(ar);
                 //  disconnect the client if not keep-alive:
-                if ((asyncState.Persistent == false))
+                if (asyncState.Persistent == false)
                 {
                     // asyncState.Socket.Disconnect(True)
                 }
 
-                DebugMessage(("Sent "
-                                + (asyncState.Tag + (" to "
-                                + (asyncState.Socket.RemoteEndPoint.ToString + ".")))), DebugMessageType.UsageMessage, "SendAsync");
+                DebugMessage("Sent " + asyncState.Tag + " to " + asyncState.Socket.RemoteEndPoint.ToString() + ".", DebugMessageType.UsageMessage, "SendAsync");
             }
             catch (Exception ex)
             {
@@ -759,7 +757,7 @@ namespace RapidServer.Http.Type1
             }
 
             //  finally terminate the socket after allowing pending transmissions to complete. this eliminates ERR_CONNECTION_RESET that would happen occasionally on random resources:
-            if ((asyncState.Persistent == false))
+            if (asyncState.Persistent == false)
             {
                 //  TODO: we check Persistent attribute twice in this method...if we put Close below Disconnect it will throw the exception that we can't access the socket because it is disposed
                 // asyncState.Socket.Close()

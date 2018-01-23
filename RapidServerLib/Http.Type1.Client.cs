@@ -95,7 +95,7 @@ namespace RapidServer.Http.Type1
             //  connect to server async
             try
             {
-                _clientSocket.BeginConnect(endPoint, new AsyncCallback(new EventHandler(this.AsyncClientConnected)), new AsyncSendState(_clientSocket, SendBufferSize, state));
+                _clientSocket.BeginConnect(endPoint, new AsyncCallback(AsyncClientConnected), new AsyncSendState(_clientSocket, SendBufferSize, state));
             }
             catch (Exception ex)
             {
@@ -133,7 +133,7 @@ namespace RapidServer.Http.Type1
                 //  start waiting for messages from the server
                 AsyncReceiveState receiveState = new AsyncReceiveState(ReceiveBufferSize, state);
                 receiveState.Socket = asyncState.Socket;
-                receiveState.Socket.BeginReceive(receiveState.Buffer, 0, ReceiveBufferSize, Net.Sockets.SocketFlags.None, new AsyncCallback(new EventHandler(this.DataReceived)), receiveState);
+                receiveState.Socket.BeginReceive(receiveState.Buffer, 0, ReceiveBufferSize, Net.Sockets.SocketFlags.None, new AsyncCallback(DataReceived), receiveState);
                 //  make a request to the server
                 AsyncSendState sendState = new AsyncSendState(asyncState.Socket, SendBufferSize, state);
                 //  if the path is a directory, ensure it has a trailing /
@@ -153,7 +153,7 @@ namespace RapidServer.Http.Type1
                 reqBytes = System.Text.Encoding.ASCII.GetBytes(reqString);
                 //  send the reqBytes data to the server
                 LogMessage(reqString, null);
-                sendState.Socket.BeginSend(reqBytes, 0, reqBytes.Length, Net.Sockets.SocketFlags.None, new AsyncCallback(new EventHandler(this.DataSent)), sendState);
+                sendState.Socket.BeginSend(reqBytes, 0, reqBytes.Length, Net.Sockets.SocketFlags.None, new AsyncCallback(DataSent), sendState);
             }
 
         }
@@ -193,7 +193,7 @@ namespace RapidServer.Http.Type1
         {
             //  get the async state object returned by the callback
             AsyncReceiveState asyncState = ((AsyncReceiveState)(ar.AsyncState));
-            string responseChunk = System.Text.Encoding.ASCII.GetString(asyncState.Buffer).TrimEnd(vbNullChar);
+            string responseChunk = System.Text.Encoding.ASCII.GetString(asyncState.Buffer).TrimEnd(Convert.ToChar(0));
             string responseString = (asyncState.Packet + responseChunk);
             //  if we haven't determined the Content-Length yet, try doing so now by attempting to extract it from the responseChunk:
             //  TODO: this halts on an error when we try a random URL.
@@ -201,9 +201,9 @@ namespace RapidServer.Http.Type1
             if ((asyncState.ReceiveSize == 0))
             {
                 string contentLength = "";
-                string transferEncoding = "";
+                //string transferEncoding = "";
                 contentLength = responseChunk.SubstringEx("Content-Length: ", '\n');
-                asyncState.ReceiveSize = contentLength;
+                asyncState.ReceiveSize = int.Parse(contentLength);
             }
 
             //  if we haven't determined the Content offset yet, try doing so now. content is located after the header and two newlines (crlf) which is 4 bytes.
@@ -225,13 +225,10 @@ namespace RapidServer.Http.Type1
                 receiveState.Packet = responseString;
                 receiveState.ReceiveSize = asyncState.ReceiveSize;
                 receiveState.TotalBytesReceived = asyncState.TotalBytesReceived;
-                receiveState.Socket.BeginReceive(receiveState.Buffer, 0, ReceiveBufferSize, Net.Sockets.SocketFlags.None, new AsyncCallback(new EventHandler(this.DataReceived)), receiveState);
+                receiveState.Socket.BeginReceive(receiveState.Buffer, 0, ReceiveBufferSize, Net.Sockets.SocketFlags.None, new AsyncCallback(DataReceived), receiveState);
             }
             else
-            {
-                HandleResponse(responseString, asyncState.State);
-            }
-
+                HandleResponse(responseString, (EventArgs)asyncState.State);
         }
     }
 }

@@ -88,7 +88,7 @@ namespace RapidServer.Http
             string contentPart = "";
             try
             {
-                int i = payload.IndexOf(('\n' + '\n'), StringComparison.Ordinal);
+                int i = payload.IndexOf(Environment.NewLine + Environment.NewLine, StringComparison.Ordinal);
                 //  TODO: this is very slow, use a string builder's substring instead
                 // headerPart = payload.Substring(0, i).Trim
                 headerPart.Append(payload, 0, i);
@@ -209,12 +209,12 @@ namespace RapidServer.Http
     public class PhpCgiHandler : Handler
     {
 
-        PhpCgiHandler()
+        public PhpCgiHandler()
         {
             Name = "PhpCgi";
         }
 
-        public override string HandleRequest(Http.Type1.Request req)
+        public override string HandleRequest(Type1.Request req)
         {
             string results;
             //  create the php process:

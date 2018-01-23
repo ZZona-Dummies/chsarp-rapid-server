@@ -170,7 +170,7 @@ namespace RapidServer.Http.Type2
         // '' <remarks></remarks>
         public string GetContentType(string path)
         {
-            string ext = IO.Path.GetExtension(path).TrimStart(".");
+            string ext = IO.Path.GetExtension(path).TrimStart('.');
             MimeType m = (MimeType)MimeTypes[ext];
             string contentType;
             if (m != null)
@@ -196,7 +196,7 @@ namespace RapidServer.Http.Type2
             for (int i = 0; i <= _maxConnections - 1; ++i)
             {
                 readWriteEventArg = new Net.Sockets.SocketAsyncEventArgs();
-                readWriteEventArg.Completed += new EventHandler(this.IoCompleted);
+                readWriteEventArg.Completed += IoCompleted;
                 readWriteEventArg.UserToken = new AsyncUserToken();
                 _bufferManager.SetBuffer(readWriteEventArg);
                 _readWritePool.Push(readWriteEventArg);
@@ -207,7 +207,7 @@ namespace RapidServer.Http.Type2
             _serverSocket.Bind(endPoint);
             _serverSocket.Listen(20000);
             StartAccept(null);
-            ServerStarted();
+            ServerStarted(null, null);
         }
 
         void StartAccept(Net.Sockets.SocketAsyncEventArgs acceptEventArg)
@@ -215,7 +215,7 @@ namespace RapidServer.Http.Type2
             if ((acceptEventArg == null))
             {
                 acceptEventArg = new Net.Sockets.SocketAsyncEventArgs();
-                acceptEventArg.Completed += new EventHandler(this.AcceptEventArgCompleted);
+                acceptEventArg.Completed += AcceptEventArgCompleted;
             }
             else
             {
@@ -368,7 +368,7 @@ namespace RapidServer.Http.Type2
             //  TODO: here we construct a response, but when serving a response from the output cache we shouldn't construct one at all!
             Response res = new Response(this, req, o.clientSocket);
             //  raise an event to handle the request/response cycle (this can be overridden during implementation to allow for custom handling)
-            HandleRequest(req, res, o.e);
+            _HandleRequest(req, res, o.e); //Handles ... ???
         }
 
         // '' <summary>
@@ -616,7 +616,7 @@ namespace RapidServer.Http.Type2
                 {
                     if (IO.File.Exists((_server.WebRoot + ("/" + d))))
                     {
-                        d;
+                        Uri += d;
                         AbsoluteUrl = (_server.WebRoot + Uri);
                         break;
                     }
@@ -776,7 +776,7 @@ namespace RapidServer.Http.Type2
 
             }
 
-            byte[,] cbuf = null;
+            byte[] cbuf = null;
             //  create a buffer exactly the size of the memorystream length (not its buffer length)
             byte[] mbuf = ms.GetBuffer();
             ms.Close();
@@ -825,11 +825,11 @@ namespace RapidServer.Http.Type2
         // '' </summary>
         // '' <returns></returns>
         // '' <remarks></remarks>
-        byte[] GetResponseBytes()
+        public byte[] GetResponseBytes()
         {
             IO.MemoryStream ms = new IO.MemoryStream();
             //  get the header bytes and add it to the response
-            byte[] headerBytes = Text.Encoding.ASCII.GetBytes(GetHeaderString);
+            byte[] headerBytes = Text.Encoding.ASCII.GetBytes(GetHeaderString());
             ms.Write(headerBytes, 0, headerBytes.Length);
             //  if there is content, add it to the response
             if (_content != null)
@@ -837,7 +837,7 @@ namespace RapidServer.Http.Type2
                 ms.Write(_content, 0, _content.Length);
             }
 
-            byte[,] rbuf = null;
+            byte[] rbuf = null;
             byte[] mbuf = ms.GetBuffer();
             Buffer.BlockCopy(mbuf, 0, rbuf, 0, rbuf.Length);
             return rbuf;
@@ -957,11 +957,11 @@ namespace RapidServer.Http.Type2
 
         public string Content;
 
-        AsyncUserToken()
+        public AsyncUserToken()
         {
         }
 
-        AsyncUserToken(Net.Sockets.Socket socket)
+        public AsyncUserToken(Net.Sockets.Socket socket)
         {
             _socket = socket;
         }

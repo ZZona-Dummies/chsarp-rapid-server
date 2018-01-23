@@ -80,7 +80,10 @@ namespace RapidServer.Http.Type1
         //  the mime type of the resource (e.g. image/jpeg)
         public bool FixPath301;
 
-        Request(string requestString, Server server, Net.Sockets.Socket client, Site site)
+        private Request()
+        { }
+
+        public Request(string requestString, Server server, Net.Sockets.Socket client, Site site)
         {
             _server = server;
             RequestString = requestString;
@@ -332,7 +335,7 @@ namespace RapidServer.Http.Type1
 
             }
 
-            byte[,] cbuf;
+            byte[] cbuf = null;
             //  create a buffer exactly the size of the memorystream length (not its buffer length)
             byte[] mbuf = ms.GetBuffer();
             ms.Close();
@@ -405,7 +408,7 @@ namespace RapidServer.Http.Type1
                 ms.Write(_content, 0, _content.Length);
             }
 
-            byte[,] rbuf;
+            byte[] rbuf = null;
             byte[] mbuf = ms.GetBuffer();
             Buffer.BlockCopy(mbuf, 0, rbuf, 0, rbuf.Length);
             return rbuf;

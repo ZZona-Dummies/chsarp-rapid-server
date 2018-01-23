@@ -103,7 +103,7 @@ namespace RapidServer
         public static Array SplitFirst(string input, string delimiter, bool trim)
         {
             string[] spl;
-            string[,] parts;
+            string[] parts = new string[2];
             spl = input.Split(delimiter[0]);
             if ((trim == true))
             {

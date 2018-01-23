@@ -9,6 +9,7 @@ using Text = System.Text;
 using Management = System.Management;
 using RapidServer.Http.Type1;
 using System.Management;
+using System.Collections.Generic;
 
 namespace RapidServerClientApp
 {
@@ -35,17 +36,17 @@ namespace RapidServerClientApp
 
         private void client_ConnectFailed()
         {
-            Invoke(new ConnectFailedDelegate(new EventHandler(this.ConnectFailed)));
+            Invoke(new ConnectFailedDelegate(ConnectFailed));
         }
 
         private void client_HandleResponse(string res, object state)
         {
-            Invoke(new HandleResponseDelegate(new EventHandler(this.HandleResponse)), res);
+            Invoke(new HandleResponseDelegate(HandleResponse), res);
         }
 
         private void client_LogMessage(string message)
         {
-            Invoke(new LogMessageDelegate(new EventHandler(this.LogMessage)), message);
+            Invoke(new LogMessageDelegate(LogMessage), message);
         }
 
         //  form load
@@ -251,11 +252,11 @@ namespace RapidServerClientApp
             {
                 //  data is in a file
                 IO.StreamReader f = new IO.StreamReader(spl[0]);
-                string delim = "";
+                char delim = Convert.ToChar(0);
                 if ((spl[1] == "tabs"))
-                    delim = "\t";
+                    delim = '\t';
                 else
-                    delim = ",";
+                    delim = ',';
 
                 //  determine if the tool data contains a formula
                 string[] formula = null;
@@ -269,7 +270,7 @@ namespace RapidServerClientApp
 
                 //  TODO: check if we should read the file as rows or as summary...
                 //  read the file as rows
-                ArrayList lines = new ArrayList();
+                List<string> lines = new List<string>();
                 while ((f.Peek() != -1))
                     lines.Add(f.ReadLine());
 
@@ -293,14 +294,14 @@ namespace RapidServerClientApp
                         for (int i = 0; (i
                                     <= (formula.Length - 1)); i++)
                         {
-                            val = (val + fields[formula[i]]);
+                            val = val + int.Parse(fields[int.Parse(formula[i])]);
                         }
 
-                        results[0] = val;
+                        results[0] = val.ToString();
                     }
                     else
                     {
-                        results[0] = fields[spl[3]].Trim;
+                        results[0] = fields[int.Parse(spl[3])].Trim();
                     }
 
                 }
@@ -321,21 +322,21 @@ namespace RapidServerClientApp
                         for (int i = 0; (i
                                     <= (formula.Length - 1)); i++)
                         {
-                            val = (val + fields[formula[i]]);
+                            val = val + int.Parse(fields[int.Parse(formula[i])]);
                         }
 
-                        results[0] = val;
+                        results[0] = val.ToString();
                     }
                     else
                     {
-                        results[0] = fields[spl[3]].Trim;
+                        results[0] = fields[int.Parse(spl[3])].Trim();
                     }
 
                 }
                 else
                 {
                     //  grab all the rows after a specific row index
-                    for (int i = 0; i <= spl[2] - 1; i++)
+                    for (int i = 0; i <= int.Parse(spl[2]) - 1; i++)
                     {
                         lines.RemoveAt(i);
                     }
@@ -351,18 +352,15 @@ namespace RapidServerClientApp
                             for (int ii = 0; (ii
                                         <= (formula.Length - 1)); ii++)
                             {
-                                val = (val + fields[formula[ii]]);
+                                val = val + int.Parse(fields[int.Parse(formula[ii])]);
                             }
 
-                            results[(results.Length - 1)] = val;
+                            results[(results.Length - 1)] = val.ToString();
                         }
                         else
-                        {
-                            results[(results.Length - 1)] = fields[spl[3]].Trim;
-                        }
+                            results[(results.Length - 1)] = fields[int.Parse(spl[3])].Trim();
 
-                        object Preserve;
-                        results[results.Length];
+                        Array.Resize(ref results, results.Length);
                     }
 
                 }
@@ -496,9 +494,9 @@ namespace RapidServerClientApp
             //  client username - leave null for now
             txtLog.AppendText((" ["
                             + (clrDate + "]")));
-            txtLog.AppendText((" \"" + message.Replace('\n', " ").TrimEnd(' ')));
+            txtLog.AppendText((" \"" + message.Replace('\n', ' ').TrimEnd(' ')));
             txtLog.AppendText("\"");
-            txtLog.AppendText('\n');
+            txtLog.AppendText(Environment.NewLine);
         }
 
         //  connect to server failed (invoked server event)
@@ -630,9 +628,9 @@ namespace RapidServerClientApp
         public ManagedProcess(string filename, string commandline)
         {
             //  use a process to run the benchmark tool and read its results
-            string results = "";
+            //string results = "";
             Process p = Process;
-            p.OutputDataReceived += new EventHandler(this.ReadOutputAsync);
+            p.OutputDataReceived += ReadOutputAsync;
             p.StartInfo.CreateNoWindow = true;
             p.StartInfo.UseShellExecute = false;
             p.StartInfo.RedirectStandardOutput = true;
