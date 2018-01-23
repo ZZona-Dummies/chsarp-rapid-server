@@ -1,4 +1,4 @@
-﻿using RapidServerLib.Enums;
+﻿using RapidSever.Enums;
 using System;
 using static RapidServer.Globals;
 using Net = System.Net;

@@ -1,4 +1,4 @@
-﻿namespace RapidServerLib.Enums
+﻿namespace RapidSever.Enums
 {
     // '' <summary>
     // '' The type of event to be logged. Some events will be enabled/disabled in the LogEvent method, depending on our current debugging goals.

@@ -5,7 +5,7 @@
 // TODO: Option Explicit On ... Warning!!! not translated
 // TODO: Option Strict On ... Warning!!! not translated
 
-using RapidServerLib.Enums;
+using RapidSever.Enums;
 using System;
 using System.Diagnostics;
 using IO = System.IO;

@@ -29,15 +29,15 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.DataVisualization.Charting.ChartArea ChartArea4 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Series Series4 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            System.Windows.Forms.DataVisualization.Charting.Title Title4 = new System.Windows.Forms.DataVisualization.Charting.Title();
-            System.Windows.Forms.DataVisualization.Charting.ChartArea ChartArea5 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Series Series5 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            System.Windows.Forms.DataVisualization.Charting.Title Title5 = new System.Windows.Forms.DataVisualization.Charting.Title();
-            System.Windows.Forms.DataVisualization.Charting.ChartArea ChartArea6 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Series Series6 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            System.Windows.Forms.DataVisualization.Charting.Title Title6 = new System.Windows.Forms.DataVisualization.Charting.Title();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea1 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Series series1 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.Title title1 = new System.Windows.Forms.DataVisualization.Charting.Title();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea2 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Series series2 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.Title title2 = new System.Windows.Forms.DataVisualization.Charting.Title();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea3 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Series series3 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.Title title3 = new System.Windows.Forms.DataVisualization.Charting.Title();
             this.btnStart = new System.Windows.Forms.Button();
             this.btnStop = new System.Windows.Forms.Button();
             this.Label1 = new System.Windows.Forms.Label();
@@ -104,12 +104,18 @@
             this.btnStart.TabIndex = 1;
             this.btnStart.Text = "Start";
             this.btnStart.UseVisualStyleBackColor = true;
+            // 
+            // btnStop
+            // 
             this.btnStop.Location = new System.Drawing.Point(60, 4);
             this.btnStop.Name = "btnStop";
             this.btnStop.Size = new System.Drawing.Size(71, 23);
             this.btnStop.TabIndex = 2;
             this.btnStop.Text = "Stop";
             this.btnStop.UseVisualStyleBackColor = true;
+            // 
+            // Label1
+            // 
             this.Label1.BackColor = System.Drawing.SystemColors.ControlDark;
             this.Label1.Dock = System.Windows.Forms.DockStyle.Top;
             this.Label1.ForeColor = System.Drawing.SystemColors.ControlLightLight;
@@ -119,6 +125,9 @@
             this.Label1.Size = new System.Drawing.Size(590, 33);
             this.Label1.TabIndex = 3;
             this.Label1.Text = "A very high performance web server utilizing .NET sockets and async I/O.";
+            // 
+            // pnlMain
+            // 
             this.pnlMain.Controls.Add(this.tabsMain);
             this.pnlMain.Controls.Add(this.Panel4);
             this.pnlMain.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -153,6 +162,9 @@
             this.tabInfo.TabIndex = 2;
             this.tabInfo.Text = "Info";
             this.tabInfo.UseVisualStyleBackColor = true;
+            // 
+            // LinkLabel2
+            // 
             this.LinkLabel2.AutoSize = true;
             this.LinkLabel2.Location = new System.Drawing.Point(68, 24);
             this.LinkLabel2.Name = "LinkLabel2";
@@ -160,6 +172,9 @@
             this.LinkLabel2.TabIndex = 13;
             this.LinkLabel2.TabStop = true;
             this.LinkLabel2.Text = "LinkLabel2";
+            // 
+            // LinkLabel1
+            // 
             this.LinkLabel1.AutoSize = true;
             this.LinkLabel1.Location = new System.Drawing.Point(68, 8);
             this.LinkLabel1.Name = "LinkLabel1";
@@ -167,18 +182,27 @@
             this.LinkLabel1.TabIndex = 12;
             this.LinkLabel1.TabStop = true;
             this.LinkLabel1.Text = "LinkLabel1";
+            // 
+            // Label3
+            // 
             this.Label3.AutoSize = true;
             this.Label3.Location = new System.Drawing.Point(8, 8);
             this.Label3.Name = "Label3";
             this.Label3.Size = new System.Drawing.Size(61, 13);
             this.Label3.TabIndex = 11;
             this.Label3.Text = "Root Path: ";
+            // 
+            // Label2
+            // 
             this.Label2.AutoSize = true;
             this.Label2.Location = new System.Drawing.Point(8, 24);
             this.Label2.Name = "Label2";
             this.Label2.Size = new System.Drawing.Size(49, 13);
             this.Label2.TabIndex = 10;
             this.Label2.Text = "Root Url:";
+            // 
+            // tabLog
+            // 
             this.tabLog.Controls.Add(this.txtLog);
             this.tabLog.Controls.Add(this.Panel3);
             this.tabLog.Location = new System.Drawing.Point(4, 22);
@@ -188,6 +212,9 @@
             this.tabLog.TabIndex = 0;
             this.tabLog.Text = "Log";
             this.tabLog.UseVisualStyleBackColor = true;
+            // 
+            // txtLog
+            // 
             this.txtLog.Dock = System.Windows.Forms.DockStyle.Fill;
             this.txtLog.Location = new System.Drawing.Point(3, 27);
             this.txtLog.Multiline = true;
@@ -196,6 +223,9 @@
             this.txtLog.Size = new System.Drawing.Size(576, 230);
             this.txtLog.TabIndex = 8;
             this.txtLog.WordWrap = false;
+            // 
+            // Panel3
+            // 
             this.Panel3.Controls.Add(this.chkEnableLog);
             this.Panel3.Controls.Add(this.chkWrapLog);
             this.Panel3.Dock = System.Windows.Forms.DockStyle.Top;
@@ -213,6 +243,9 @@
             this.chkEnableLog.TabIndex = 10;
             this.chkEnableLog.Text = "Enable";
             this.chkEnableLog.UseVisualStyleBackColor = true;
+            // 
+            // chkWrapLog
+            // 
             this.chkWrapLog.AutoSize = true;
             this.chkWrapLog.Location = new System.Drawing.Point(68, 4);
             this.chkWrapLog.Name = "chkWrapLog";
@@ -220,6 +253,9 @@
             this.chkWrapLog.TabIndex = 9;
             this.chkWrapLog.Text = "Wrap";
             this.chkWrapLog.UseVisualStyleBackColor = true;
+            // 
+            // tabPerformance
+            // 
             this.tabPerformance.Controls.Add(this.tabsPerformance);
             this.tabPerformance.Location = new System.Drawing.Point(4, 22);
             this.tabPerformance.Name = "tabPerformance";
@@ -228,6 +264,9 @@
             this.tabPerformance.TabIndex = 3;
             this.tabPerformance.Text = "Performance";
             this.tabPerformance.UseVisualStyleBackColor = true;
+            // 
+            // tabsPerformance
+            // 
             this.tabsPerformance.Controls.Add(this.tabConnections);
             this.tabsPerformance.Controls.Add(this.tabCpu);
             this.tabsPerformance.Controls.Add(this.tabRam);
@@ -248,22 +287,25 @@
             this.tabConnections.TabIndex = 0;
             this.tabConnections.Text = "Connections";
             this.tabConnections.UseVisualStyleBackColor = true;
-            ChartArea4.AxisY.Title = "connection count";
-            ChartArea4.Name = "ChartArea1";
-            this.chartConnections.ChartAreas.Add(ChartArea4);
+            // 
+            // chartConnections
+            // 
+            chartArea1.AxisY.Title = "connection count";
+            chartArea1.Name = "ChartArea1";
+            this.chartConnections.ChartAreas.Add(chartArea1);
             this.chartConnections.Dock = System.Windows.Forms.DockStyle.Fill;
             this.chartConnections.Location = new System.Drawing.Point(3, 3);
             this.chartConnections.Name = "chartConnections";
-            Series4.ChartArea = "ChartArea1";
-            Series4.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.FastLine;
-            Series4.Name = "Series1";
-            this.chartConnections.Series.Add(Series4);
+            series1.ChartArea = "ChartArea1";
+            series1.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.FastLine;
+            series1.Name = "Series1";
+            this.chartConnections.Series.Add(series1);
             this.chartConnections.Size = new System.Drawing.Size(562, 222);
             this.chartConnections.TabIndex = 0;
             this.chartConnections.Text = "Chart1";
-            Title4.Name = "Title1";
-            Title4.Text = "Connections";
-            this.chartConnections.Titles.Add(Title4);
+            title1.Name = "Title1";
+            title1.Text = "Connections";
+            this.chartConnections.Titles.Add(title1);
             // 
             // tabCpu
             // 
@@ -275,24 +317,27 @@
             this.tabCpu.TabIndex = 1;
             this.tabCpu.Text = "CPU";
             this.tabCpu.UseVisualStyleBackColor = true;
-            ChartArea5.AxisY.Maximum = 100d;
-            ChartArea5.AxisY.Minimum = 0d;
-            ChartArea5.AxisY.Title = "cpu usage %";
-            ChartArea5.Name = "ChartArea1";
-            this.chartCpu.ChartAreas.Add(ChartArea5);
+            // 
+            // chartCpu
+            // 
+            chartArea2.AxisY.Maximum = 100D;
+            chartArea2.AxisY.Minimum = 0D;
+            chartArea2.AxisY.Title = "cpu usage %";
+            chartArea2.Name = "ChartArea1";
+            this.chartCpu.ChartAreas.Add(chartArea2);
             this.chartCpu.Dock = System.Windows.Forms.DockStyle.Fill;
             this.chartCpu.Location = new System.Drawing.Point(3, 3);
             this.chartCpu.Name = "chartCpu";
-            Series5.ChartArea = "ChartArea1";
-            Series5.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.FastLine;
-            Series5.Name = "Series1";
-            this.chartCpu.Series.Add(Series5);
+            series2.ChartArea = "ChartArea1";
+            series2.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.FastLine;
+            series2.Name = "Series1";
+            this.chartCpu.Series.Add(series2);
             this.chartCpu.Size = new System.Drawing.Size(562, 222);
             this.chartCpu.TabIndex = 19;
             this.chartCpu.Text = "Chart2";
-            Title5.Name = "titCpuMain";
-            Title5.Text = "CPU";
-            this.chartCpu.Titles.Add(Title5);
+            title2.Name = "titCpuMain";
+            title2.Text = "CPU";
+            this.chartCpu.Titles.Add(title2);
             // 
             // tabRam
             // 
@@ -304,22 +349,25 @@
             this.tabRam.TabIndex = 2;
             this.tabRam.Text = "RAM";
             this.tabRam.UseVisualStyleBackColor = true;
-            ChartArea6.AxisY.Title = "megabytes";
-            ChartArea6.Name = "ChartArea1";
-            this.chartRam.ChartAreas.Add(ChartArea6);
+            // 
+            // chartRam
+            // 
+            chartArea3.AxisY.Title = "megabytes";
+            chartArea3.Name = "ChartArea1";
+            this.chartRam.ChartAreas.Add(chartArea3);
             this.chartRam.Dock = System.Windows.Forms.DockStyle.Fill;
             this.chartRam.Location = new System.Drawing.Point(3, 3);
             this.chartRam.Name = "chartRam";
-            Series6.ChartArea = "ChartArea1";
-            Series6.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.FastLine;
-            Series6.Name = "Series1";
-            this.chartRam.Series.Add(Series6);
+            series3.ChartArea = "ChartArea1";
+            series3.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.FastLine;
+            series3.Name = "Series1";
+            this.chartRam.Series.Add(series3);
             this.chartRam.Size = new System.Drawing.Size(562, 222);
             this.chartRam.TabIndex = 20;
             this.chartRam.Text = "Chart2";
-            Title6.Name = "Title1";
-            Title6.Text = "RAM";
-            this.chartRam.Titles.Add(Title6);
+            title3.Name = "Title1";
+            title3.Text = "RAM";
+            this.chartRam.Titles.Add(title3);
             // 
             // TabPage1
             // 
@@ -331,14 +379,17 @@
             this.TabPage1.TabIndex = 4;
             this.TabPage1.Text = "Sites";
             this.TabPage1.UseVisualStyleBackColor = true;
+            // 
+            // DataGridView1
+            // 
             this.DataGridView1.AllowUserToAddRows = false;
             this.DataGridView1.AllowUserToDeleteRows = false;
             this.DataGridView1.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.AllCells;
             this.DataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.DataGridView1.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-                    this.Column1,
-                    this.Column2,
-                    this.Column3});
+            this.Column1,
+            this.Column2,
+            this.Column3});
             this.DataGridView1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.DataGridView1.Location = new System.Drawing.Point(3, 3);
             this.DataGridView1.Name = "DataGridView1";
@@ -391,8 +442,8 @@
             // ctxMain
             // 
             this.ctxMain.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-                    this.SpawnClientToolStripMenuItem1,
-                    this.KillPhpcgiexeProcessesToolStripMenuItem1});
+            this.SpawnClientToolStripMenuItem1,
+            this.KillPhpcgiexeProcessesToolStripMenuItem1});
             this.ctxMain.Name = "ContextMenuStrip1";
             this.ctxMain.Size = new System.Drawing.Size(210, 48);
             // 
@@ -401,15 +452,24 @@
             this.SpawnClientToolStripMenuItem1.Name = "SpawnClientToolStripMenuItem1";
             this.SpawnClientToolStripMenuItem1.Size = new System.Drawing.Size(209, 22);
             this.SpawnClientToolStripMenuItem1.Text = "Spawn Client";
+            // 
+            // KillPhpcgiexeProcessesToolStripMenuItem1
+            // 
             this.KillPhpcgiexeProcessesToolStripMenuItem1.Name = "KillPhpcgiexeProcessesToolStripMenuItem1";
             this.KillPhpcgiexeProcessesToolStripMenuItem1.Size = new System.Drawing.Size(209, 22);
             this.KillPhpcgiexeProcessesToolStripMenuItem1.Text = "Kill php-cgi.exe processes";
+            // 
+            // btnPurgeCache
+            // 
             this.btnPurgeCache.Location = new System.Drawing.Point(137, 4);
             this.btnPurgeCache.Name = "btnPurgeCache";
             this.btnPurgeCache.Size = new System.Drawing.Size(72, 23);
             this.btnPurgeCache.TabIndex = 11;
             this.btnPurgeCache.Text = "Purge";
             this.btnPurgeCache.UseVisualStyleBackColor = true;
+            // 
+            // cboServer
+            // 
             this.cboServer.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.cboServer.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cboServer.FormattingEnabled = true;
@@ -428,24 +488,33 @@
             this.CheckBox1.TabIndex = 9;
             this.CheckBox1.Text = "Wrap";
             this.CheckBox1.UseVisualStyleBackColor = true;
+            // 
+            // Button1
+            // 
             this.Button1.Location = new System.Drawing.Point(145, 1);
             this.Button1.Name = "Button1";
             this.Button1.Size = new System.Drawing.Size(80, 23);
             this.Button1.TabIndex = 9;
             this.Button1.Text = "Open Site";
             this.Button1.UseVisualStyleBackColor = true;
+            // 
+            // Button2
+            // 
             this.Button2.Location = new System.Drawing.Point(57, 1);
             this.Button2.Name = "Button2";
             this.Button2.Size = new System.Drawing.Size(84, 23);
             this.Button2.TabIndex = 8;
             this.Button2.Text = "Open Folder";
             this.Button2.UseVisualStyleBackColor = true;
+            // 
+            // timPerformance
+            // 
             this.timPerformance.Enabled = true;
             this.timPerformance.Interval = 500;
             // 
             // frmHttpServer
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6f, 13f);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(590, 359);
             this.Controls.Add(this.pnlMain);
@@ -454,6 +523,7 @@
             this.MinimumSize = new System.Drawing.Size(263, 103);
             this.Name = "frmHttpServer";
             this.Text = "Rapid Web Server";
+            this.Load += new System.EventHandler(this.frmHttpServer_Load);
             this.pnlMain.ResumeLayout(false);
             this.tabsMain.ResumeLayout(false);
             this.tabInfo.ResumeLayout(false);
@@ -475,6 +545,9 @@
             this.Panel2.ResumeLayout(false);
             this.ctxMain.ResumeLayout(false);
             this.ResumeLayout(false);
+
+            //Event handlers
+            Activated += new System.EventHandler(frmHttpServer_Activated);
         }
 
         internal System.Windows.Forms.Button btnStart;

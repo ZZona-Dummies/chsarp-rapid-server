@@ -13,7 +13,7 @@ namespace RapidServer.Http
 
         private string _webRoot;
 
-        private void Add(Handler h)
+        public void Add(Handler h)
         {
             _handlers.Add(h.Name, h);
         }

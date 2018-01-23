@@ -1,4 +1,4 @@
-﻿using RapidServerLib.Enums;
+﻿using RapidSever.Enums;
 using System;
 using System.Collections;
 using static RapidServer.Globals;
@@ -93,7 +93,7 @@ namespace RapidServer.Http.Type1
         // '' Constructs a new HTTP server using the config file.
         // '' </summary>
         // '' <remarks></remarks>
-        private Server()
+        public Server()
         {
             //  we need to load the config once so Form_Load() can populate the form
             //  TODO: we need to unload and reload the config when the server is stopped and restarted via the form
@@ -136,7 +136,7 @@ namespace RapidServer.Http.Type1
                 s.Title = n["Title"].Value;
                 s.Path = n["Path"].Value;
                 s.Host = n["Host"].Value;
-                s.Port = n["Port"].Value;
+                s.Port = int.Parse(n["Port"].Value);
                 s.RootPath = s.Path;
                 //  TODO: convert relpath to abspath
                 s.RootUrl = ("http://"
@@ -163,7 +163,7 @@ namespace RapidServer.Http.Type1
             EnableOutputCache = true;
             foreach (Xml.XmlNode n in root["MimeTypes"])
             {
-                string[] fileExtensions = n.Attributes["FileExtension"].Value.Split(((char)(",")));
+                string[] fileExtensions = n.Attributes["FileExtension"].Value.Split(',');
                 foreach (string ext in fileExtensions)
                 {
                     MimeType m = new MimeType();
@@ -301,7 +301,7 @@ namespace RapidServer.Http.Type1
         // '' <remarks></remarks>
         private string GetContentType(string path)
         {
-            string ext = IO.Path.GetExtension(path).TrimStart(((char)(".")));
+            string ext = IO.Path.GetExtension(path).TrimStart('.');
             MimeType m = ((MimeType)(MimeTypes[ext]));
             string contentType;
             if (m != null)
@@ -316,7 +316,7 @@ namespace RapidServer.Http.Type1
         // '' Starts the server, allowing clients to connect and make requests to one or more of the sites specified in the config.
         // '' </summary>
         // '' <remarks></remarks>
-        private void StartServer()
+        public void StartServer()
         {
             // LoadConfig()
             //  bind each site to it's address and start listening for client connections
@@ -352,7 +352,7 @@ namespace RapidServer.Http.Type1
         // '' Stops the server, shutting down each Site.
         // '' </summary>
         // '' <remarks></remarks>
-        private void StopServer()
+        public void StopServer()
         {
             //  shutdown each site:
             //  TODO: this throws a bunch of exceptions. To test, just Start then Stop.

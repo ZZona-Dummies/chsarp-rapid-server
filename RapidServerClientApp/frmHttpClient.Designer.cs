@@ -666,6 +666,8 @@
             this.tabOptions.PerformLayout();
             this.ResumeLayout(false);
 
+            //Event handlers
+            
         }
 
         internal System.Windows.Forms.Label Label1;
