@@ -1,8 +1,12 @@
 ﻿using System;
 using System.Collections;
 using System.Data;
+using System.Diagnostics;
 using System.Linq;
 using System.Windows.Forms;
+using Xml = System.Xml;
+using IO = System.IO;
+using Text = System.Text;
 
 namespace RapidServerClientApp
 {
@@ -53,7 +57,7 @@ namespace RapidServerClientApp
                 cboUrl.Items.Add(s.Url);
             }
 
-            cboUrl.SelectedItem = cboUrl.Items(0);
+            cboUrl.SelectedItem = cboUrl.Items[0];
             //  add the tools
             foreach (Tool t in this.Tools.Values)
             {
@@ -62,9 +66,9 @@ namespace RapidServerClientApp
                 cboBenchmarkTool3.Items.Add(t.Name);
             }
 
-            cboBenchmarkTool.SelectedItem = cboBenchmarkTool.Items(0);
-            cboBenchmarkTool2.SelectedItem = cboBenchmarkTool2.Items(0);
-            cboBenchmarkTool3.SelectedItem = cboBenchmarkTool3.Items(0);
+            cboBenchmarkTool.SelectedItem = cboBenchmarkTool.Items[0];
+            cboBenchmarkTool2.SelectedItem = cboBenchmarkTool2.Items[0];
+            cboBenchmarkTool3.SelectedItem = cboBenchmarkTool3.Items[0];
         }
 
         // '' <summary>
@@ -632,7 +636,10 @@ namespace RapidServerClientApp
 
         public Text.StringBuilder Output = new Text.StringBuilder();
 
-        ManagedProcess(void filename, void commandline)
+        private ManagedProcess()
+        { }
+
+        public ManagedProcess(void filename, void commandline)
         {
             //  use a process to run the benchmark tool and read its results
             string results = "";
