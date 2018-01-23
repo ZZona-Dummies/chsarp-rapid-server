@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RapidServerLib.Enums;
+using System;
 using System.Collections;
 using static RapidServer.Globals;
 using Concurrent = System.Collections.Concurrent;
@@ -746,12 +747,5 @@ namespace RapidServer.Http.Type1
                 // RaiseEvent ClientDisconnected(asyncState.Socket)
             }
         }
-    }
-
-    internal class ProxyState
-    {
-        public Request req;
-
-        public Net.Sockets.Socket client;
     }
 }

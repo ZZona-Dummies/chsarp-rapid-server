@@ -7,7 +7,7 @@
     <ProjectGuid>{DDC044F4-679D-4CA3-BBE5-30DE5FFA4B7A}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>RapidServerLib</RootNamespace>
+    <RootNamespace>RapidServer</RootNamespace>
     <AssemblyName>RapidServerLib</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -41,14 +41,28 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Http.cs" />
-    <Compile Include="Http.Type1.Client.cs" />
-    <Compile Include="Http.Type1.cs" />
-    <Compile Include="Http.Type1.Server.cs" />
-    <Compile Include="Http.Type2.cs" />
-    <Compile Include="Http.Type3.cs" />
+    <Compile Include="Enums\Enums.cs" />
+    <Compile Include="Http\AspDotNetHandler.cs" />
+    <Compile Include="Http\Handler.cs" />
+    <Compile Include="Http\Handlers.cs" />
+    <Compile Include="Http\Http.cs" />
+    <Compile Include="Http\Type1\Client.cs" />
+    <Compile Include="Http\Type1\Core.cs" />
+    <Compile Include="Http\Type1\ProxyState.cs" />
+    <Compile Include="Http\Type1\Server.cs" />
+    <Compile Include="Http\Type2\BufferManager.cs" />
+    <Compile Include="Http\Type2\Request.cs" />
+    <Compile Include="Http\Type2\Response.cs" />
+    <Compile Include="Http\Type2\Server.cs" />
+    <Compile Include="Http\Type2\SocketAsyncEventArgsPool.cs" />
+    <Compile Include="Http\Type3\Server.cs" />
+    <Compile Include="Http\PhpCgiHandler.cs" />
+    <Compile Include="Http\PhpFastCgiHandler.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="RapidServer.cs" />
+    <Compile Include="Globals.cs" />
+    <Compile Include="Http\SimpleHttpReader.cs" />
+    <Compile Include="Http\SimpleRequestResponse.cs" />
+    <Compile Include="Http\Site.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

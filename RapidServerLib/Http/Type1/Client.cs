@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RapidServerLib.Enums;
+using System;
 using static RapidServer.Globals;
 using Net = System.Net;
 
@@ -59,7 +60,7 @@ namespace RapidServer.Http.Type1
         {
             string hostAddress = "";
             Net.IPAddress ipExists = null;
-            if (System.Net.IPAddress.TryParse(uri.Host, out ipExists))
+            if (Net.IPAddress.TryParse(uri.Host, out ipExists))
             {
                 //  localhost
                 hostAddress = uri.Host;
@@ -69,7 +70,7 @@ namespace RapidServer.Http.Type1
             {
                 //  TODO: this could halt with an error if the host doesn't exist (we should return name_not_resolved)
                 Net.IPHostEntry hostEntry;
-                hostEntry = System.Net.Dns.GetHostEntry(uri.Host);
+                hostEntry = Net.Dns.GetHostEntry(uri.Host);
                 foreach (Net.IPAddress ip in hostEntry.AddressList)
                 {
                     hostAddress = ip.ToString();
