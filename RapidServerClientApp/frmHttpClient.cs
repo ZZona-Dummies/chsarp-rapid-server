@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections;
-using System.Data;
 using System.Diagnostics;
 using System.Linq;
 using System.Windows.Forms;
@@ -8,6 +7,8 @@ using Xml = System.Xml;
 using IO = System.IO;
 using Text = System.Text;
 using Management = System.Management;
+using RapidServer.Http.Type1;
+using System.Management;
 
 namespace RapidServerClientApp
 {
@@ -18,7 +19,7 @@ namespace RapidServerClientApp
             InitializeComponent();
         }
 
-        private RapidServer.Http.Type1.Client client = new RapidServer.Http.Type1.Client(false);
+        private Client client = new Client(false);
 
         public Hashtable Sites = new Hashtable();
 
@@ -48,7 +49,7 @@ namespace RapidServerClientApp
         }
 
         //  form load
-        private void frmHttpClient_Load(object sender, System.EventArgs e)
+        private void frmHttpClient_Load(object sender, EventArgs e)
         {
             //  load the config
             LoadConfig();
@@ -150,23 +151,21 @@ namespace RapidServerClientApp
             if ((Chart1.Titles.Count == 1))
             {
                 //  get os
-                Management.ManagementObjectSearcher wmios = new Management.ManagementObjectSearcher("SELECT * FROM  Win32_OperatingSystem");
-                object os = wmios.Get.Cast(Of, Management.ManagementObject).First;
-                string osName = os["Name"];
+                ManagementObjectSearcher wmios = new ManagementObjectSearcher("SELECT * FROM  Win32_OperatingSystem");
+                ManagementObject os = wmios.Get().OfType<ManagementObject>().First();
+                string osName = (string)os["Name"];
                 if (osName.Contains("Windows 7"))
-                {
                     osName = "Win7";
-                }
 
-                osName = (osName + (" " + os["OSArchitecture"].trim));
+                osName = osName + " " + ((string)os["OSArchitecture"]).Trim();
                 //  get cpu
-                Management.ManagementObjectSearcher wmicpu = new Management.ManagementObjectSearcher("SELECT * FROM  Win32_Processor");
-                object cpu = wmicpu.Get.Cast(Of, Management.ManagementObject).First;
-                string cpuName = cpu["Name"];
-                cpuName = cpuName.Replace("(R)", "").Replace("(r)", "").Replace("(TM)", "").Replace("(tm)", "").Replace("CPU ", "").Trim;
+                ManagementObjectSearcher wmicpu = new ManagementObjectSearcher("SELECT * FROM  Win32_Processor");
+                ManagementObject cpu = wmicpu.Get().OfType<ManagementObject>().First();
+                string cpuName = (string)cpu["Name"];
+                cpuName = cpuName.Replace("(R)", "").Replace("(r)", "").Replace("(TM)", "").Replace("(tm)", "").Replace("CPU ", "").Trim();
                 //  get ram
-                Management.ManagementObjectSearcher wmiram = new Management.ManagementObjectSearcher("SELECT * FROM  Win32_ComputerSystem");
-                object ram = wmiram.Get.Cast(Of, Management.ManagementObject).First;
+                ManagementObjectSearcher wmiram = new ManagementObjectSearcher("SELECT * FROM  Win32_ComputerSystem");
+                ManagementObject ram = wmiram.Get().OfType<ManagementObject>().First();
                 int totalRam = ((int)ram["TotalPhysicalMemory"] / (1024 / (1024 / 1024)));
                 //  print results to chart title
                 Chart1.Titles.Add((osName + (" - "
@@ -210,12 +209,12 @@ namespace RapidServerClientApp
                 int i;
                 if ((startTag.ToLower() == Environment.NewLine))
                 {
-                    startTag = '\n';
+                    startTag = Environment.NewLine;
                 }
 
                 if ((endTag.ToLower() == Environment.NewLine))
                 {
-                    endTag = '\n';
+                    endTag = Environment.NewLine;
                 }
 
                 i = s.IndexOf(startTag);
@@ -240,16 +239,13 @@ namespace RapidServerClientApp
                     "FAIL WHALE!"};
             }
 
-            string[,] results;
+            string[] results = null;
             string[] spl = s.Split(',');
             if ((spl[0] == "stdout"))
             {
                 //  data is in stdout
                 if ((spl[1] == "between"))
-                {
                     results[0] = SubstringBetween(stdout, spl[2], spl[3]);
-                }
-
             }
             else
             {
@@ -518,7 +514,7 @@ namespace RapidServerClientApp
             txtRaw.Text += res;
         }
 
-        private void btnGo_Click(object sender, System.EventArgs e)
+        private void btnGo_Click(object sender, EventArgs e)
         {
             btnGo.Enabled = false;
             txtRaw.Text = "";
@@ -543,7 +539,7 @@ namespace RapidServerClientApp
             btnGo.Enabled = true;
         }
 
-        private void chkWrapLog_CheckedChanged(object sender, System.EventArgs e)
+        private void chkWrapLog_CheckedChanged(object sender, EventArgs e)
         {
             if ((chkWrapLog.Checked == true))
             {
@@ -556,12 +552,12 @@ namespace RapidServerClientApp
 
         }
 
-        private void btnDetectSystemInfo_Click(object sender, System.EventArgs e)
+        private void btnDetectSystemInfo_Click(object sender, EventArgs e)
         {
             DetectSystemInfo();
         }
 
-        private void btnClear_Click(object sender, System.EventArgs e)
+        private void btnClear_Click(object sender, EventArgs e)
         {
             while ((Chart1.Series.Count > 0))
             {
@@ -581,7 +577,7 @@ namespace RapidServerClientApp
             TextBox1.Text = "";
         }
 
-        private void cboBenchmarkTool_SelectedIndexChanged(object sender, System.EventArgs e)
+        private void cboBenchmarkTool_SelectedIndexChanged(object sender, EventArgs e)
         {
             Tool t = (Tool)Tools[cboBenchmarkTool.Text];
             if (t.Speed.Contains("%num"))

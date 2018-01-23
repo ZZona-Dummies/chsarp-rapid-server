@@ -136,7 +136,7 @@ namespace RapidServer
 
             public RapidServer.Http.Site Site;
 
-            public System.Net.Sockets.Socket Socket;
+            public Net.Sockets.Socket Socket;
 
             public byte[] Buffer;
 
@@ -155,7 +155,10 @@ namespace RapidServer
 
             public object State;
 
-            AsyncReceiveState(int argBufferSize, object argState)
+            private AsyncReceiveState()
+            { }
+
+            public AsyncReceiveState(int argBufferSize, object argState)
             {
                 //object Buffer;
                 State = argState;
@@ -165,7 +168,7 @@ namespace RapidServer
         public class AsyncSendState
         {
 
-            public System.Net.Sockets.Socket Socket;
+            public Net.Sockets.Socket Socket;
 
             public byte[] BytesToSend;
 
@@ -179,7 +182,10 @@ namespace RapidServer
 
             public object State;
 
-            AsyncSendState(System.Net.Sockets.Socket argSocket, int argBufferSize, object argState)
+            private AsyncSendState()
+            { }
+
+            public AsyncSendState(Net.Sockets.Socket argSocket, int argBufferSize, object argState)
             {
                 Socket = argSocket;
                 BufferSize = argBufferSize;
@@ -214,15 +220,10 @@ namespace RapidServer
         //[System.Runtime.CompilerServices.Extension()]
         public static string GetValue(Xml.XmlNode x)
         {
-            if ((x == null))
-            {
+            if (x == null)
                 return "";
-            }
             else
-            {
                 return x.InnerText;
-            }
-
         }
 
         // '' <summary>
@@ -235,9 +236,7 @@ namespace RapidServer
         public static string[] Slice(string s, string firstOccurrenceOf)
         {
             if ((firstOccurrenceOf == null))
-            {
                 return null;
-            }
             else
             {
                 string[] spl = s.Split(firstOccurrenceOf[0]);
@@ -245,7 +244,7 @@ namespace RapidServer
                 string secondSlice = "";
                 for (int i = 1; i <= spl.Length - 1; i++)
                 {
-                    ("/" + spl[i]);
+                    secondSlice += "/" + spl[i];
                 }
 
                 return new string[] {

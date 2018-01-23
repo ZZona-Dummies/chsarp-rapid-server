@@ -80,5 +80,11 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\RapidServerLib\RapidServerLib.csproj">
+      <Project>{DDC044F4-679D-4CA3-BBE5-30DE5FFA4B7A}</Project>
+      <Name>RapidServerLib</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

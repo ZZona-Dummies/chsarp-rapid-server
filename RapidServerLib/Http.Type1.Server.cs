@@ -331,14 +331,14 @@ namespace RapidServer.Http.Type1
                 try
                 {
                     Net.IPEndPoint ep = AddressToEndpoint(s.Host, s.Port);
-                    s.Socket = new System.Net.Sockets.Socket(Net.Sockets.AddressFamily.InterNetwork, Net.Sockets.SocketType.Stream, Net.Sockets.ProtocolType.Tcp);
+                    s.Socket = new Net.Sockets.Socket(Net.Sockets.AddressFamily.InterNetwork, Net.Sockets.SocketType.Stream, Net.Sockets.ProtocolType.Tcp);
                     s.Socket.Bind(ep);
                     s.Socket.Listen(20000);
                     s.Socket.BeginAccept(0, new AsyncCallback(new EventHandler(this.ClientConnectedAsync)), s);
                     DebugMessage("Site started...", DebugMessageType.InfoMessage, "StartServer");
-                    SiteStarted();
+                    SiteStarted(null, null);
                 }
-                catch (System.Net.Sockets.SocketException ex)
+                catch (Net.Sockets.SocketException ex)
                 {
                     DebugMessage(("Could not start the site \'"
                                     + (s.Title + ("\'. Make sure it\'s address ("
@@ -352,7 +352,7 @@ namespace RapidServer.Http.Type1
 
             }
 
-            ServerStarted();
+            ServerStarted(null, null);
         }
 
         // '' <summary>
@@ -381,7 +381,7 @@ namespace RapidServer.Http.Type1
                 s.Socket.Disconnect(false);
             }
 
-            ServerShutdown();
+            ServerShutdown(null, null);
         }
 
         // '' <summary>
@@ -393,7 +393,7 @@ namespace RapidServer.Http.Type1
         {
             //  get the async state object from the async BeginAccept method, which contains the server's listening socket
             Site s = ((Site)(ar.AsyncState));
-            System.Net.Sockets.Socket clientSocket = null;
+            Net.Sockets.Socket clientSocket = null;
             try
             {
                 //  accept the client connection, giving us the client socket to work with:
@@ -421,7 +421,7 @@ namespace RapidServer.Http.Type1
             AsyncReceiveState asyncState = new AsyncReceiveState(ReceiveBufferSize, null);
             asyncState.Site = s;
             asyncState.Socket = clientSocket;
-            asyncState.Socket.BeginReceive(asyncState.Buffer, 0, ReceiveBufferSize, Net.Sockets.SocketFlags.None, new AsyncCallback(new System.EventHandler(this.RequestReceivedAsync)), asyncState);
+            asyncState.Socket.BeginReceive(asyncState.Buffer, 0, ReceiveBufferSize, Net.Sockets.SocketFlags.None, new AsyncCallback(new EventHandler(this.RequestReceivedAsync)), asyncState);
         }
 
         // '' <summary>
@@ -468,7 +468,7 @@ namespace RapidServer.Http.Type1
             //    to handle it on a separate ThreadPool thread; it is important that we free up the I/O completion port being 
             //    used for this async operation as soon as possible, therefore we don't even attempt to parse the requestBytes at 
             //    this point and just immediately pass the raw request bytes to a ThreadPool thread for further processing
-            Threading.ThreadPool.QueueUserWorkItem(new System.EventHandler(this.HandleRequestAsync), asyncState);
+            Threading.ThreadPool.QueueUserWorkItem(new EventHandler(this.HandleRequestAsync), asyncState);
         }
 
         //  handles the request on a separate ThreadPool thread.
@@ -616,7 +616,7 @@ namespace RapidServer.Http.Type1
                         //  custome handler not found, serve as static file:
                         res.ContentType = req.MimeType.Name;
                         res.SetContent(IO.File.ReadAllBytes(req.AbsPath));
-                        res.StatusCode = 200;
+                        res.StatusCode = "200";
                     }
 
                     //  cache the response for this request:
@@ -635,14 +635,14 @@ namespace RapidServer.Http.Type1
                         res.SetContent(Text.Encoding.ASCII.GetBytes(listing));
                         res.Headers.Remove("Connection");
                         //  don't keep-alive for a 404
-                        res.StatusCode = 200;
+                        res.StatusCode = "200";
                     }
                     else
                     {
                         res.SetContent(Text.Encoding.ASCII.GetBytes("FAIL WHALE!"));
                         res.Headers.Remove("Connection");
                         //  don't keep-alive for a 404
-                        res.StatusCode = 404;
+                        res.StatusCode = "404";
                     }
 
                 }
@@ -650,18 +650,18 @@ namespace RapidServer.Http.Type1
             }
 
             //  the response has been finalized, send it to the client
-            res.ResponseBytes = res.BuildResponseBytes;
+            res.ResponseBytes = res.BuildResponseBytes();
             SendResponse(req, res, client);
         }
 
         //  builds a directory listing using html for basic navigation
-        void BuildDirectoryListing(Request req)
+        public string BuildDirectoryListing(Request req)
         {
             string listing = "<h1>Directory Listing</h1>";
             foreach (IO.DirectoryInfo d in (new IO.DirectoryInfo(req.AbsPath) + GetDirectories))
             {
-                ("<div><a href=\'"
-                            + (req.Uri.TrimEnd("/") + ("/"
+                listing += ("<div><a href=\'"
+                            + (req.Uri.TrimEnd('/') + ("/"
                             + (d.Name + ("\'>"
                             + (d.Name + "</a></div>"))))));
             }
@@ -673,7 +673,7 @@ namespace RapidServer.Http.Type1
                 // ico = System.Drawing.Icon.ExtractAssociatedIcon(f.FullName)
                 // ico.ToBitmap.Save(ms, System.Drawing.Imaging.ImageFormat.Png)
                 // listing &= "<div>" & "<image style='height:16px' src='data:image/png;base64," & Convert.ToBase64String(ms.ToArray) & "' /><a href='" & f.Name & "'>" & f.Name & "</a></div>"
-                ("<div>" + ("<a href=\'"
+                listing += ("<div>" + ("<a href=\'"
                             + (f.Name + ("\'>"
                             + (f.Name + "</a></div>")))));
             }
@@ -692,7 +692,7 @@ namespace RapidServer.Http.Type1
             //  start sending the response to the client in an async fashion:
             try
             {
-                client.BeginSend(res.ResponseBytes, 0, res.ResponseBytes.Length, Net.Sockets.SocketFlags.None, new System.EventHandler(this.SendResponseAsync), sendState);
+                client.BeginSend(res.ResponseBytes, 0, res.ResponseBytes.Length, Net.Sockets.SocketFlags.None, new EventHandler(this.SendResponseAsync), sendState);
             }
             catch (Exception ex)
             {
@@ -719,7 +719,7 @@ namespace RapidServer.Http.Type1
                 receiveState.Socket = client;
                 try
                 {
-                    receiveState.Socket.BeginReceive(receiveState.Buffer, 0, ReceiveBufferSize, Net.Sockets.SocketFlags.None, new AsyncCallback(new System.EventHandler(this.RequestReceivedAsync)), receiveState);
+                    receiveState.Socket.BeginReceive(receiveState.Buffer, 0, ReceiveBufferSize, Net.Sockets.SocketFlags.None, new AsyncCallback(new EventHandler(this.RequestReceivedAsync)), receiveState);
                 }
                 catch (Exception ex)
                 {

@@ -248,7 +248,10 @@ namespace RapidServer.Http.Type1
 
         public byte[] ResponseBytes;
 
-        Response(Server server, Request req, Net.Sockets.Socket client)
+        private Response()
+        { }
+
+        public Response(Server server, Request req, Net.Sockets.Socket client)
         {
             ScriptName = req.ScriptName;
             Request = req;
@@ -290,7 +293,7 @@ namespace RapidServer.Http.Type1
         // '' </summary>
         // '' <param name="contentBytes"></param>
         // '' <remarks></remarks>
-        void SetContent(byte[] contentBytes)
+        public void SetContent(byte[] contentBytes)
         {
             //  TODO: conditionally set Content-Length if needed - the header is not always necessary (e.g. when TransferMethod = ChunkedEncoding)
             IO.MemoryStream ms = new IO.MemoryStream();
@@ -335,7 +338,7 @@ namespace RapidServer.Http.Type1
             ms.Close();
             ms.Dispose();
             Buffer.BlockCopy(mbuf, 0, cbuf, 0, cbuf.Length);
-            ContentLength = cbuf.Length.ToString;
+            ContentLength = cbuf.Length.ToString();
             _content = cbuf;
         }
 
@@ -345,7 +348,7 @@ namespace RapidServer.Http.Type1
             SetContent(Text.Encoding.UTF8.GetBytes(contentString));
         }
 
-        string BuildHeaderString()
+        public string BuildHeaderString()
         {
             string s = 
             ("HTTP/1.1 "
@@ -383,7 +386,7 @@ namespace RapidServer.Http.Type1
         // '' </summary>
         // '' <returns></returns>
         // '' <remarks></remarks>
-        byte[] BuildResponseBytes()
+        public byte[] BuildResponseBytes()
         {
             IO.MemoryStream ms = new IO.MemoryStream();
             string fullHeaderString = BuildHeaderString() + BuildCookieString() + '\n';

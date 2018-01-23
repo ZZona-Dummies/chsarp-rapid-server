@@ -196,14 +196,14 @@ namespace RapidServer.Http.Type2
             for (int i = 0; i <= _maxConnections - 1; ++i)
             {
                 readWriteEventArg = new Net.Sockets.SocketAsyncEventArgs();
-                readWriteEventArg.Completed += new System.EventHandler(this.IoCompleted);
+                readWriteEventArg.Completed += new EventHandler(this.IoCompleted);
                 readWriteEventArg.UserToken = new AsyncUserToken();
                 _bufferManager.SetBuffer(readWriteEventArg);
                 _readWritePool.Push(readWriteEventArg);
             }
 
             Net.IPEndPoint endPoint = AddressToEndpoint(Ip, Port);
-            _serverSocket = new System.Net.Sockets.Socket(endPoint.AddressFamily, Net.Sockets.SocketType.Stream, Net.Sockets.ProtocolType.Tcp);
+            _serverSocket = new Net.Sockets.Socket(endPoint.AddressFamily, Net.Sockets.SocketType.Stream, Net.Sockets.ProtocolType.Tcp);
             _serverSocket.Bind(endPoint);
             _serverSocket.Listen(20000);
             StartAccept(null);
@@ -215,7 +215,7 @@ namespace RapidServer.Http.Type2
             if ((acceptEventArg == null))
             {
                 acceptEventArg = new Net.Sockets.SocketAsyncEventArgs();
-                acceptEventArg.Completed += new System.EventHandler(this.AcceptEventArgCompleted);
+                acceptEventArg.Completed += new EventHandler(this.AcceptEventArgCompleted);
             }
             else
             {
@@ -383,7 +383,7 @@ namespace RapidServer.Http.Type2
             //  serve the requested resource from the output cache or from disk; better yet, store the entire response and serve that up to save some time
             if ((OutputCache.ContainsKey(req.AbsoluteUrl) == true))
             {
-                Response cachedResponse = Response)OutputCache[req.AbsoluteUrl];
+                Response cachedResponse = (Response)OutputCache[req.AbsoluteUrl];
                 res = cachedResponse;
                 DebugMessage(("Serving resource from cache: "
                                 + (req.AbsoluteUrl + ".")), DebugMessageType.UsageMessage, "ClientRequest event");
@@ -428,13 +428,13 @@ namespace RapidServer.Http.Type2
                 }
 
                 //  send the response to the client who made the initial request
-                byte[] responseBytes = res.GetResponseBytes;
+                byte[] responseBytes = res.GetResponseBytes();
                 // Dim sendEventArg As Net.Sockets.SocketAsyncEventArgs = _readWritePool.Pop
                 // Dim ar As AsyncUserToken = client
                 // sendEventArg.UserToken = ar
                 // sendEventArg.SetBuffer(responseBytes, 0, responseBytes.Length)
                 client.SetBuffer(responseBytes, 0, responseBytes.Length);
-                AsyncUserToken token = client.UserToken;
+                AsyncUserToken token = (AsyncUserToken)client.UserToken;
                 bool willRaiseEvent = token.Socket.SendAsync(client);
                 if (!willRaiseEvent)
                 {
@@ -443,7 +443,7 @@ namespace RapidServer.Http.Type2
                 }
 
                 //  handle keep-alive or disconnect
-                if ((res.Headers("Connection") == "keep-alive"))
+                if (res.Headers["Connection"] == "keep-alive")
                 {
                     //  receive more from the client
                     // Dim readEventArgs As Net.Sockets.SocketAsyncEventArgs = _readWritePool.Pop
@@ -460,7 +460,7 @@ namespace RapidServer.Http.Type2
                 // Dim sendState As New AsyncSendState(client)
                 // sendState.BytesToSend = responseBytes
                 // sendState.Tag = req.AbsoluteUrl
-                // If res.Headers("Connection") = "keep-alive" Then
+                // If res.Headers["Connection") = "keep-alive" Then
                 //     sendState.Persistent = True
                 // End If
                 // Try
@@ -569,13 +569,16 @@ namespace RapidServer.Http.Type2
 
         public MimeType MimeType;
 
-        Request(string requestString, Server server)
+        private Request()
+        { }
+
+        public Request(string requestString, Server server)
         {
             _server = server;
             ParseRequestString(requestString);
         }
 
-        Request(byte[] buffer, Server server)
+        public Request(byte[] buffer, Server server)
         {
             _server = server;
             object requestString = Text.Encoding.ASCII.GetString(buffer);
@@ -687,8 +690,11 @@ namespace RapidServer.Http.Type2
         //  the requested uri's content type, which is pulled from the mimetype
         public string ContentLength;
 
+        private Response()
+        { }
+
         //  the number of bytes representing the content
-        Response(Server server, Request req, Net.Sockets.Socket client)
+        public Response(Server server, Request req, Net.Sockets.Socket client)
         {
             if ((req.Headers.ContainsKey("Connection") == true))
             {
@@ -789,7 +795,7 @@ namespace RapidServer.Http.Type2
         void SetHeader(string key, string value)
         {
             //  TODO: this seems to be trying to set the Reponse Headers several times per page load... e.g. _headers.Add(key, key & value) says item already exists
-            // _headers(key) = key & ": " & value
+            // _Headers[key) = key & ": " & value
             _headers[key] = value;
         }
 

@@ -38,7 +38,10 @@ namespace RapidServer.Http.Type1
 
         private string message;
 
-        Client(bool keepAlive)
+        private Client()
+        { }
+
+        public Client(bool keepAlive)
         {
             _keepAlive = keepAlive;
         }
@@ -48,16 +51,16 @@ namespace RapidServer.Http.Type1
         // '' </summary>
         // '' <param name="url"></param>
         // '' <remarks></remarks>
-        void Go(string url, object state)
+        public void Go(string url, object state)
         {
             //  use uribuilder to format the url:
             Connect(new UriBuilder(url), state);
         }
 
-        string GetHostIP(UriBuilder uri)
+        private string GetHostIP(UriBuilder uri)
         {
             string hostAddress = "";
-            System.Net.IPAddress ipExists = null;
+            Net.IPAddress ipExists = null;
             if (System.Net.IPAddress.TryParse(uri.Host, out ipExists))
             {
                 //  localhost
@@ -67,9 +70,9 @@ namespace RapidServer.Http.Type1
             else
             {
                 //  TODO: this could halt with an error if the host doesn't exist (we should return name_not_resolved)
-                System.Net.IPHostEntry hostEntry;
+                Net.IPHostEntry hostEntry;
                 hostEntry = System.Net.Dns.GetHostEntry(uri.Host);
-                foreach (System.Net.IPAddress ip in hostEntry.AddressList)
+                foreach (Net.IPAddress ip in hostEntry.AddressList)
                 {
                     hostAddress = ip.ToString();
                 }
@@ -79,7 +82,7 @@ namespace RapidServer.Http.Type1
             return hostAddress;
         }
 
-        void Connect(UriBuilder req, object state)
+        private void Connect(UriBuilder req, object state)
         {
             //  store the request in a global so we can use it during async callbacks
             _req = req;
@@ -92,7 +95,7 @@ namespace RapidServer.Http.Type1
             //  connect to server async
             try
             {
-                _clientSocket.BeginConnect(endPoint, new AsyncCallback(new System.EventHandler(this.AsyncClientConnected)), new AsyncSendState(_clientSocket, SendBufferSize, state));
+                _clientSocket.BeginConnect(endPoint, new AsyncCallback(new EventHandler(this.AsyncClientConnected)), new AsyncSendState(_clientSocket, SendBufferSize, state));
             }
             catch (Exception ex)
             {
@@ -130,7 +133,7 @@ namespace RapidServer.Http.Type1
                 //  start waiting for messages from the server
                 AsyncReceiveState receiveState = new AsyncReceiveState(ReceiveBufferSize, state);
                 receiveState.Socket = asyncState.Socket;
-                receiveState.Socket.BeginReceive(receiveState.Buffer, 0, ReceiveBufferSize, Net.Sockets.SocketFlags.None, new AsyncCallback(new System.EventHandler(this.DataReceived)), receiveState);
+                receiveState.Socket.BeginReceive(receiveState.Buffer, 0, ReceiveBufferSize, Net.Sockets.SocketFlags.None, new AsyncCallback(new EventHandler(this.DataReceived)), receiveState);
                 //  make a request to the server
                 AsyncSendState sendState = new AsyncSendState(asyncState.Socket, SendBufferSize, state);
                 //  if the path is a directory, ensure it has a trailing /
@@ -149,8 +152,8 @@ namespace RapidServer.Http.Type1
                             + (_req.Host + ('\n' + '\n')))))));
                 reqBytes = System.Text.Encoding.ASCII.GetBytes(reqString);
                 //  send the reqBytes data to the server
-                LogMessage(reqString);
-                sendState.Socket.BeginSend(reqBytes, 0, reqBytes.Length, Net.Sockets.SocketFlags.None, new AsyncCallback(new System.EventHandler(this.DataSent)), sendState);
+                LogMessage(reqString, null);
+                sendState.Socket.BeginSend(reqBytes, 0, reqBytes.Length, Net.Sockets.SocketFlags.None, new AsyncCallback(new EventHandler(this.DataSent)), sendState);
             }
 
         }
@@ -207,7 +210,7 @@ namespace RapidServer.Http.Type1
             if ((asyncState.ContentOffset == 0))
             {
                 int contentOffset;
-                contentOffset = (responseChunk.IndexOf(('\n' + '\n')) + 4);
+                contentOffset = (responseChunk.IndexOf(Environment.NewLine + Environment.NewLine) + 4);
                 asyncState.ContentOffset = contentOffset;
             }
 
@@ -222,7 +225,7 @@ namespace RapidServer.Http.Type1
                 receiveState.Packet = responseString;
                 receiveState.ReceiveSize = asyncState.ReceiveSize;
                 receiveState.TotalBytesReceived = asyncState.TotalBytesReceived;
-                receiveState.Socket.BeginReceive(receiveState.Buffer, 0, ReceiveBufferSize, Net.Sockets.SocketFlags.None, new AsyncCallback(new System.EventHandler(this.DataReceived)), receiveState);
+                receiveState.Socket.BeginReceive(receiveState.Buffer, 0, ReceiveBufferSize, Net.Sockets.SocketFlags.None, new AsyncCallback(new EventHandler(this.DataReceived)), receiveState);
             }
             else
             {
