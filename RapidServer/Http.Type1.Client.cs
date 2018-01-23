@@ -1,4 +1,8 @@
-﻿namespace RapidServer.Http.Type1
+﻿using System;
+using static RapidServer.Globals;
+using Net = System.Net;
+
+namespace RapidServer.Http.Type1
 {
 
     // '' <summary>
@@ -54,7 +58,7 @@
         {
             string hostAddress = "";
             System.Net.IPAddress ipExists = null;
-            if (System.Net.IPAddress.TryParse(uri.Host, ipExists))
+            if (System.Net.IPAddress.TryParse(uri.Host, out ipExists))
             {
                 //  localhost
                 hostAddress = uri.Host;
@@ -67,7 +71,7 @@
                 hostEntry = System.Net.Dns.GetHostEntry(uri.Host);
                 foreach (System.Net.IPAddress ip in hostEntry.AddressList)
                 {
-                    hostAddress = ip.ToString;
+                    hostAddress = ip.ToString();
                 }
 
             }
@@ -93,7 +97,7 @@
             catch (Exception ex)
             {
                 DebugMessage("Could not connect to server.", DebugMessageType.ErrorMessage, "Connect", ex.Message);
-                ConnectFailed();
+                ConnectFailed(state, null);
             }
 
         }
@@ -111,24 +115,24 @@
                 asyncState.Socket.EndConnect(ar);
                 //  at this point, the EndConnect succeeded and we are connected to the server! handle the success outside this Try block.
                 connectSuccessful = true;
-                ConnectSucceeded();
+                ConnectSucceeded(state, null);
             }
             catch (Exception ex)
             {
                 //  at this point, the EndConnect failed and we are NOT connected to the server!
                 DebugMessage("Could not connect to the server.", DebugMessageType.ErrorMessage, "Connect", ex.Message);
-                ConnectFailed();
+                ConnectFailed(state, null);
             }
 
             //  if the client has connected, proceed
             if ((connectSuccessful == true))
             {
                 //  start waiting for messages from the server
-                AsyncReceiveState receiveState = new AsyncReceiveState(this.ReceiveBufferSize, state);
+                AsyncReceiveState receiveState = new AsyncReceiveState(ReceiveBufferSize, state);
                 receiveState.Socket = asyncState.Socket;
                 receiveState.Socket.BeginReceive(receiveState.Buffer, 0, ReceiveBufferSize, Net.Sockets.SocketFlags.None, new AsyncCallback(new System.EventHandler(this.DataReceived)), receiveState);
                 //  make a request to the server
-                AsyncSendState sendState = new AsyncSendState(asyncState.Socket, this.SendBufferSize, state);
+                AsyncSendState sendState = new AsyncSendState(asyncState.Socket, SendBufferSize, state);
                 //  if the path is a directory, ensure it has a trailing /
                 // If IO.Path.GetExtension(_request) = "" Then
                 //     If _request.EndsWith("/") = False Then

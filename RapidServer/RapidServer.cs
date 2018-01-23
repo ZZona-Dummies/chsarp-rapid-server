@@ -6,6 +6,10 @@
 // TODO: Option Strict On ... Warning!!! not translated
 
 using System;
+using Net = System.Net;
+using Xml = System.Xml;
+using IO = System.IO;
+using System.Diagnostics;
 
 namespace RapidServer
 {
@@ -100,14 +104,11 @@ namespace RapidServer
         {
             string[] spl;
             string[,] parts;
-            spl = input.Split(((char)(delimiter)));
+            spl = input.Split(delimiter[0]);
             if ((trim == true))
             {
-                for (i = 0; (i
-                            <= (spl.Length - 1)); i++)
-                {
-                    spl[i] = spl[i].Trim;
-                }
+                for (int i = 0; i <= spl.Length - 1; i++)
+                    spl[i] = spl[i].Trim();
 
             }
 
@@ -185,17 +186,16 @@ namespace RapidServer
                 this.State = argState;
             }
 
-            static int NextOffset()
+            public int NextOffset()
             {
                 return Progress;
             }
 
-            static int NextLength()
+            public int NextLength()
             {
-                if (((BytesToSend.Length - Progress)
-                            > this.BufferSize))
+                if (BytesToSend.Length - Progress > BufferSize)
                 {
-                    return this.BufferSize;
+                    return BufferSize;
                 }
                 else
                 {
@@ -211,7 +211,7 @@ namespace RapidServer
         // '' <param name="x"></param>
         // '' <returns></returns>
         // '' <remarks></remarks>
-        [System.Runtime.CompilerServices.Extension()]
+        //[System.Runtime.CompilerServices.Extension()]
         public static string GetValue(Xml.XmlNode x)
         {
             if ((x == null))
@@ -231,7 +231,7 @@ namespace RapidServer
         // '' <param name="s"></param>
         // '' <returns></returns>
         // '' <remarks></remarks>
-        [System.Runtime.CompilerServices.Extension()]
+        //[System.Runtime.CompilerServices.Extension()]
         public static string[] Slice(string s, string firstOccurrenceOf)
         {
             if ((firstOccurrenceOf == null))
@@ -243,8 +243,7 @@ namespace RapidServer
                 string[] spl = s.Split(firstOccurrenceOf[0]);
                 string firstSlice = spl[0];
                 string secondSlice = "";
-                for (int i = 1; (i
-                            <= (spl.Length - 1)); i++)
+                for (int i = 1; i <= spl.Length - 1; i++)
                 {
                     ("/" + spl[i]);
                 }
@@ -262,7 +261,7 @@ namespace RapidServer
         // '' <param name="s"></param>
         // '' <returns></returns>
         // '' <remarks></remarks>
-        [System.Runtime.CompilerServices.Extension()]
+        //[System.Runtime.CompilerServices.Extension()]
         public static string SubstringEx(string s, string s1, string s2)
         {
             string ret = "";
