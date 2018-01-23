@@ -1,23 +1,21 @@
 ﻿using System;
 using System.Collections;
-using Concurrent = System.Collections.Concurrent;
-using Net = System.Net;
-using Xml = System.Xml;
-using IO = System.IO;
-using Threading = System.Threading;
-using Text = System.Text;
 using static RapidServer.Globals;
+using Concurrent = System.Collections.Concurrent;
+using IO = System.IO;
+using Net = System.Net;
+using Text = System.Text;
+using Threading = System.Threading;
+using Xml = System.Xml;
 
 namespace RapidServer.Http.Type1
 {
-
     // '' <summary>
     // '' An http server with an async I/O model implemented via IAsyncResult (.NET 2.0+). Utilizes the event-based asynchronous pattern (EAP) and the asynchronous programming model (APM) pattern.
     // '' </summary>
     // '' <remarks></remarks>
     public class Server
     {
-
         public int SendBufferSize;
 
         public int ReceiveBufferSize;
@@ -50,23 +48,23 @@ namespace RapidServer.Http.Type1
         public int DisconnectedC;
 
         //  the server should function out-of-box by handling its own events internally, but the events can also be overridden during implementation for custom handling
-        event EventHandler SiteStarted;
+        private event EventHandler SiteStarted;
 
-        event EventHandler ServerStarted;
+        private event EventHandler ServerStarted;
 
-        event EventHandler ServerShutdown;
+        private event EventHandler ServerShutdown;
 
-        event EventHandler HandleRequest;
+        private event EventHandler HandleRequest;
 
         private Request req;
 
         private Net.Sockets.Socket client;
 
-        event EventHandler ProxyRequest;
+        private event EventHandler ProxyRequest;
 
         private string server_address;
 
-        event EventHandler ClientConnecting;
+        private event EventHandler ClientConnecting;
 
         //private Request req;
 
@@ -74,13 +72,13 @@ namespace RapidServer.Http.Type1
 
         private string head;
 
-        event EventHandler ClientConnected;
+        private event EventHandler ClientConnected;
 
         private Net.Sockets.Socket argClientSocket;
 
-        event EventHandler ClientDisconnected;
+        private event EventHandler ClientDisconnected;
 
-        event EventHandler LogMessage;
+        private event EventHandler LogMessage;
 
         private string message;
 
@@ -94,7 +92,7 @@ namespace RapidServer.Http.Type1
         // '' Constructs a new HTTP server using the config file.
         // '' </summary>
         // '' <remarks></remarks>
-        Server()
+        private Server()
         {
             //  we need to load the config once so Form_Load() can populate the form
             //  TODO: we need to unload and reload the config when the server is stopped and restarted via the form
@@ -105,12 +103,12 @@ namespace RapidServer.Http.Type1
         // '' Loads the server config file http.xml from disk and configures the server to operate as defined by the config.
         // '' </summary>
         // '' <remarks></remarks>
-        void LoadConfig()
+        private void LoadConfig()
         {
-            //  TODO: Xml functions are very picky after load, if we try to access a key that doesn't exist it will throw a 
-            //    vague error that does not stop the debugger on the error line, and the innerexception states 'object reference 
+            //  TODO: Xml functions are very picky after load, if we try to access a key that doesn't exist it will throw a
+            //    vague error that does not stop the debugger on the error line, and the innerexception states 'object reference
             //    not set to an instance of an object'. a custom function GetValue() helps avoid nulls but not this. default values should
-            //    be assumed by the server for cases when the value can't be loaded from the config, or the server should regenerate the config 
+            //    be assumed by the server for cases when the value can't be loaded from the config, or the server should regenerate the config
             //    per its known format and then load it.
             if ((IO.File.Exists("http.xml") == false))
             {
@@ -175,7 +173,6 @@ namespace RapidServer.Http.Type1
                     m.Handler = n.Attributes["Handler"].Value;
                     MimeTypes.Add(m.FileExtension, m);
                 }
-
             }
 
             //  parse the default documents, which are used when the request uri is a directory instead of a document:
@@ -191,7 +188,6 @@ namespace RapidServer.Http.Type1
                 {
                     ResponseHeaders.Add(n.InnerText);
                 }
-
             }
 
             //  parse the handlers, which let us use external programs and api calls, such as a php script parser or ldap query:
@@ -209,14 +205,11 @@ namespace RapidServer.Http.Type1
                         h.ExecutablePath = handlerPath;
                         _handlers.Add(h);
                     }
-
                 }
-
             }
-
         }
 
-        void CreateConfig()
+        private void CreateConfig()
         {
             IO.StreamWriter f = new IO.StreamWriter("http.xml");
             string str = @"<![CDATA[<?xml version=""1.0"" encoding=""utf-8"" ?>
@@ -305,7 +298,7 @@ namespace RapidServer.Http.Type1
         // '' <param name="path"></param>
         // '' <returns></returns>
         // '' <remarks></remarks>
-        string GetContentType(string path)
+        private string GetContentType(string path)
         {
             string ext = IO.Path.GetExtension(path).TrimStart(((char)(".")));
             MimeType m = ((MimeType)(MimeTypes[ext]));
@@ -322,7 +315,7 @@ namespace RapidServer.Http.Type1
         // '' Starts the server, allowing clients to connect and make requests to one or more of the sites specified in the config.
         // '' </summary>
         // '' <remarks></remarks>
-        void StartServer()
+        private void StartServer()
         {
             // LoadConfig()
             //  bind each site to it's address and start listening for client connections
@@ -349,7 +342,6 @@ namespace RapidServer.Http.Type1
                 {
                     DebugMessage(("Unhandled exception in StartServer: " + ex2.Message), DebugMessageType.ErrorMessage, "StartServer", ex2.Message);
                 }
-
             }
 
             ServerStarted(null, null);
@@ -359,7 +351,7 @@ namespace RapidServer.Http.Type1
         // '' Stops the server, shutting down each Site.
         // '' </summary>
         // '' <remarks></remarks>
-        void StopServer()
+        private void StopServer()
         {
             //  shutdown each site:
             //  TODO: this throws a bunch of exceptions. To test, just Start then Stop.
@@ -389,7 +381,7 @@ namespace RapidServer.Http.Type1
         // '' </summary>
         // '' <param name="ar"></param>
         // '' <remarks></remarks>
-        void ClientConnectedAsync(IAsyncResult ar)
+        private void ClientConnectedAsync(IAsyncResult ar)
         {
             //  get the async state object from the async BeginAccept method, which contains the server's listening socket
             Site s = ((Site)(ar.AsyncState));
@@ -425,12 +417,12 @@ namespace RapidServer.Http.Type1
         }
 
         // '' <summary>
-        // '' Accepts the client request, builds the request/response objects and passes them to the event handler where the response 
+        // '' Accepts the client request, builds the request/response objects and passes them to the event handler where the response
         // '' object will be finalized and sent back to the client.
         // '' </summary>
         // '' <param name="ar"></param>
         // '' <remarks></remarks>
-        void RequestReceivedAsync(IAsyncResult ar)
+        private void RequestReceivedAsync(IAsyncResult ar)
         {
             //  get the async state object:
             AsyncReceiveState asyncState = ((AsyncReceiveState)(ar.AsyncState));
@@ -451,7 +443,6 @@ namespace RapidServer.Http.Type1
                     // RaiseEvent ClientDisconnected(asyncState.Socket)
                     return;
                 }
-
             }
 
             //  if we get numBytesReceived equal to zero, it could indicate that the client has disconnected
@@ -464,15 +455,15 @@ namespace RapidServer.Http.Type1
                 return;
             }
 
-            //  if we've reached this point, we were able to parse the IAsyncResult which contains our raw request bytes, so proceed 
-            //    to handle it on a separate ThreadPool thread; it is important that we free up the I/O completion port being 
-            //    used for this async operation as soon as possible, therefore we don't even attempt to parse the requestBytes at 
+            //  if we've reached this point, we were able to parse the IAsyncResult which contains our raw request bytes, so proceed
+            //    to handle it on a separate ThreadPool thread; it is important that we free up the I/O completion port being
+            //    used for this async operation as soon as possible, therefore we don't even attempt to parse the requestBytes at
             //    this point and just immediately pass the raw request bytes to a ThreadPool thread for further processing
             Threading.ThreadPool.QueueUserWorkItem(new Threading.WaitCallback((o) => { HandleRequestAsync((AsyncReceiveState)o); }), asyncState);
         }
 
         //  handles the request on a separate ThreadPool thread.
-        void HandleRequestAsync(AsyncReceiveState asyncState)
+        private void HandleRequestAsync(AsyncReceiveState asyncState)
         {
             //  TODO: first try pull the request from the request cache, otherwise parse it now
             //  convert the raw request bytes/string into an HttpRequest object for ease of use
@@ -504,9 +495,7 @@ namespace RapidServer.Http.Type1
                         DebugMessage(("Serving resource from cache: "
                                         + (req.AbsPath + ".")), DebugMessageType.UsageMessage, "HandleRequestAsync");
                     }
-
                 }
-
             }
 
             //  response couldn't be served from cache, handle the request according to the site role
@@ -528,9 +517,7 @@ namespace RapidServer.Http.Type1
                     //  forward the request to the selected upstream server
                     ProxyRequest(req, upstreams[i], asyncState.Socket);
                 }
-
             }
-
         }
 
         //  makes a GET request to the upstream server on behalf of the client
@@ -556,7 +543,7 @@ namespace RapidServer.Http.Type1
         }
 
         //  try to cache the response, if it hasn't already been
-        void TryCache(Request req, Response res)
+        private void TryCache(Request req, Response res)
         {
             if (((EnableOutputCache == true)
                         && ((req.CacheAllowed == true)
@@ -564,7 +551,6 @@ namespace RapidServer.Http.Type1
             {
                 OutputCache.TryAdd((req.AbsPath + req.QueryString), res);
             }
-
         }
 
         // '' <summary>
@@ -609,7 +595,6 @@ namespace RapidServer.Http.Type1
                             //  TODO: something tells me this is not obeying RFC protocol, look into it...
                             res.StatusCode = "200";
                         }
-
                     }
                     else
                     {
@@ -644,9 +629,7 @@ namespace RapidServer.Http.Type1
                         //  don't keep-alive for a 404
                         res.StatusCode = "404";
                     }
-
                 }
-
             }
 
             //  the response has been finalized, send it to the client
@@ -682,7 +665,7 @@ namespace RapidServer.Http.Type1
         }
 
         //  sends the http response to the client
-        void SendResponse(Request req, Response res, Net.Sockets.Socket client)
+        private void SendResponse(Request req, Response res, Net.Sockets.Socket client)
         {
             //  convert the response into bytes and package it in an async object for callback purposes:
             // Dim responseBytes() As Byte = res.BuildResponseBytes
@@ -708,7 +691,6 @@ namespace RapidServer.Http.Type1
                 {
                     sendState.Persistent = true;
                 }
-
             }
 
             //  start receiving more data from the client in an async fashion
@@ -725,9 +707,7 @@ namespace RapidServer.Http.Type1
                 {
                     DebugMessage(("SendResponse encountered an exception when trying to BeginReceive on the client socket. " + ex.Message), DebugMessageType.ErrorMessage, "ClientRequest", ex.Message);
                 }
-
             }
-
         }
 
         // '' <summary>
@@ -735,7 +715,7 @@ namespace RapidServer.Http.Type1
         // '' </summary>
         // '' <param name="ar"></param>
         // '' <remarks></remarks>
-        void SendResponseAsync(IAsyncResult ar)
+        private void SendResponseAsync(IAsyncResult ar)
         {
             AsyncSendState asyncState = ((AsyncSendState)(ar.AsyncState));
             try
@@ -765,13 +745,11 @@ namespace RapidServer.Http.Type1
                 // Threading.Interlocked.Decrement(Me.ConnectedClients)
                 // RaiseEvent ClientDisconnected(asyncState.Socket)
             }
-
         }
     }
 
-    class ProxyState
+    internal class ProxyState
     {
-
         public Request req;
 
         public Net.Sockets.Socket client;

@@ -1,16 +1,15 @@
-﻿using Net = System.Net;
-using Xml = System.Xml;
-using IO = System.IO;
-using Threading = System.Threading;
-using Text = System.Text;
-using System;
-using static RapidServer.Globals;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using static RapidServer.Globals;
+using IO = System.IO;
+using Net = System.Net;
+using Text = System.Text;
+using Threading = System.Threading;
+using Xml = System.Xml;
 
 namespace RapidServer.Http.Type2
 {
-
     // '' <summary>
     // '' An http server with an async I/O model implemented via SocketAsyncEventArgs (.NET 3.5+). Utilizes a special async model designed for the Socket class which consists of a shared buffer and pre-allocated object pool for async state objects to avoid object instantiation and memory thrashing/fragmentation during every http request.
     // '' The MSDN code example for this pattern is very poor. The issues (and solution) are explained in the Background section in this tutorial: http://www.codeproject.com/Articles/83102/C-SocketAsyncEventArgs-High-Performance-Socket-Cod?fid=1573061
@@ -18,7 +17,6 @@ namespace RapidServer.Http.Type2
     // '' <remarks></remarks>
     public class Server
     {
-
         private Net.Sockets.Socket _serverSocket;
 
         private Interops _interops = new Interops();
@@ -46,11 +44,11 @@ namespace RapidServer.Http.Type2
         public ArrayList ResponseHeaders = new ArrayList();
 
         //  events - the server should function out-of-box by calling its own events, but these events can also be overridden during implementation for custom handling if desired.
-        event EventHandler ServerStarted;
+        private event EventHandler ServerStarted;
 
-        event EventHandler ServerShutdown;
+        private event EventHandler ServerShutdown;
 
-        event EventHandler HandleRequest;
+        private event EventHandler HandleRequest;
 
         private Request req;
 
@@ -58,24 +56,24 @@ namespace RapidServer.Http.Type2
 
         private Net.Sockets.SocketAsyncEventArgs client;
 
-        event EventHandler ClientConnecting;
+        private event EventHandler ClientConnecting;
 
         private Net.Sockets.Socket socket;
 
         private string head;
 
-        event EventHandler ClientConnected;
+        private event EventHandler ClientConnected;
 
         private Net.Sockets.Socket argClientSocket;
 
-        event EventHandler ClientDisconnected;
+        private event EventHandler ClientDisconnected;
 
         // '' <summary>
         // '' Constructs a new HTTP server given a desired web root path.
         // '' </summary>
         // '' <param name="rootPath"></param>
         // '' <remarks></remarks>
-        Server(string rootPath)
+        private Server(string rootPath)
         {
             WebRoot = rootPath;
             LoadConfig();
@@ -94,7 +92,7 @@ namespace RapidServer.Http.Type2
         // '' Loads the server config file http.xml from disk and configures the server to operate as defined by the config.
         // '' </summary>
         // '' <remarks></remarks>
-        void LoadConfig()
+        private void LoadConfig()
         {
             Xml.XmlDocument cfg = new Xml.XmlDocument();
             try
@@ -123,23 +121,17 @@ namespace RapidServer.Http.Type2
                     m.Handler = n.Attributes["Handler"].Value;
                     MimeTypes.Add(m.FileExtension, m);
                 }
-
             }
 
             //  parse the default documents, which are used when the request uri is a directory instead of a document:
             foreach (Xml.XmlNode n in root["DefaultDocuments"])
-            {
                 DefaultDocuments.Add(n.InnerText);
-            }
 
             //  parse the response headers, which let us include certain headers in the http response by default:
             if (bool.Parse(root["ResponseHeaders"].Attributes["Enabled"].InnerText) == true)
             {
                 foreach (Xml.XmlNode n in root["ResponseHeaders"])
-                {
                     ResponseHeaders.Add(n.InnerText);
-                }
-
             }
 
             //  parse the virtual hosts, which let us define more than one functional site from various paths on disk:
@@ -187,7 +179,7 @@ namespace RapidServer.Http.Type2
         // '' <param name="Ip"></param>
         // '' <param name="Port"></param>
         // '' <remarks></remarks>
-        void StartServer(string Ip, int Port)
+        private void StartServer(string Ip, int Port)
         {
             //  new async pattern
             _bufferManager.InitBuffer();
@@ -210,7 +202,7 @@ namespace RapidServer.Http.Type2
             ServerStarted(null, null);
         }
 
-        void StartAccept(Net.Sockets.SocketAsyncEventArgs acceptEventArg)
+        private void StartAccept(Net.Sockets.SocketAsyncEventArgs acceptEventArg)
         {
             if ((acceptEventArg == null))
             {
@@ -228,10 +220,9 @@ namespace RapidServer.Http.Type2
             {
                 ProcessAccept(acceptEventArg);
             }
-
         }
 
-        void AcceptEventArgCompleted(object sender, Net.Sockets.SocketAsyncEventArgs e)
+        private void AcceptEventArgCompleted(object sender, Net.Sockets.SocketAsyncEventArgs e)
         {
             ProcessAccept(e);
         }
@@ -241,7 +232,7 @@ namespace RapidServer.Http.Type2
         // '' </summary>
         // '' <param name="e"></param>
         // '' <remarks></remarks>
-        void ProcessAccept(Net.Sockets.SocketAsyncEventArgs e)
+        private void ProcessAccept(Net.Sockets.SocketAsyncEventArgs e)
         {
             Threading.Interlocked.Increment(ref _numConnections);
             Net.Sockets.SocketAsyncEventArgs readEventArgs = _readWritePool.Pop;
@@ -258,7 +249,7 @@ namespace RapidServer.Http.Type2
             //  maybe move this up higher in the method
         }
 
-        void IoCompleted(object sender, Net.Sockets.SocketAsyncEventArgs e)
+        private void IoCompleted(object sender, Net.Sockets.SocketAsyncEventArgs e)
         {
             string s = Text.Encoding.UTF8.GetString(e.Buffer, e.Offset, e.BytesTransferred);
             switch (e.LastOperation)
@@ -266,16 +257,18 @@ namespace RapidServer.Http.Type2
                 case Net.Sockets.SocketAsyncOperation.Receive:
                     ProcessReceive(e);
                     break;
+
                 case Net.Sockets.SocketAsyncOperation.Send:
                     ProcessSend(e);
                     break;
+
                 default:
                     Beep();
                     break;
             }
         }
 
-        void ProcessReceive(Net.Sockets.SocketAsyncEventArgs e)
+        private void ProcessReceive(Net.Sockets.SocketAsyncEventArgs e)
         {
             //  get the client who we are receiving data from
             AsyncUserToken token = (AsyncUserToken)e.UserToken;
@@ -332,10 +325,9 @@ namespace RapidServer.Http.Type2
             {
                 CloseClientSocket(e);
             }
-
         }
 
-        void ProcessSend(Net.Sockets.SocketAsyncEventArgs e)
+        private void ProcessSend(Net.Sockets.SocketAsyncEventArgs e)
         {
             if ((e.SocketError == Net.Sockets.SocketError.Success))
             {
@@ -353,7 +345,6 @@ namespace RapidServer.Http.Type2
             {
                 CloseClientSocket(e);
             }
-
         }
 
         // '' <summary>
@@ -424,7 +415,6 @@ namespace RapidServer.Http.Type2
                         //  page not found, return 404 status code
                         res.StatusCode = 404;
                     }
-
                 }
 
                 //  send the response to the client who made the initial request
@@ -479,10 +469,9 @@ namespace RapidServer.Http.Type2
                 //     End Try
                 // End If
             }
-
         }
 
-        void CloseClientSocket(Net.Sockets.SocketAsyncEventArgs e)
+        private void CloseClientSocket(Net.Sockets.SocketAsyncEventArgs e)
         {
             AsyncUserToken token = (AsyncUserToken)e.UserToken;
             try
@@ -504,7 +493,7 @@ namespace RapidServer.Http.Type2
         // '' Stops the server, disconnecting any current clients and terminating any pending requests/responses.
         // '' </summary>
         // '' <remarks></remarks>
-        void StopServer()
+        private void StopServer()
         {
             try
             {
@@ -520,9 +509,8 @@ namespace RapidServer.Http.Type2
             _serverSocket.Close();
         }
 
-        class ProcessRequestObject
+        private class ProcessRequestObject
         {
-
             public byte[] requestBytes;
 
             public Server server;
@@ -547,7 +535,6 @@ namespace RapidServer.Http.Type2
     // '' <remarks></remarks>
     public class Request
     {
-
         private Server _server;
 
         public string Method;
@@ -590,7 +577,7 @@ namespace RapidServer.Http.Type2
         // '' </summary>
         // '' <param name="requestString"></param>
         // '' <remarks></remarks>
-        void ParseRequestString(string requestString)
+        private void ParseRequestString(string requestString)
         {
             string[] requestStringParts = requestString.Split('\n');
             //  parse the request-line which is the first line in the request string (e.g. "GET /file.html HTTP/1.1")
@@ -620,9 +607,7 @@ namespace RapidServer.Http.Type2
                         AbsoluteUrl = (_server.WebRoot + Uri);
                         break;
                     }
-
                 }
-
             }
 
             //  parse the requested resource's file type (extension) and path
@@ -644,9 +629,7 @@ namespace RapidServer.Http.Type2
                                     - (delimIndex - 2)));
                     Headers.Add(key, value);
                 }
-
             }
-
         }
     }
 
@@ -666,7 +649,6 @@ namespace RapidServer.Http.Type2
     // '' <remarks></remarks>
     public class Response
     {
-
         private Server _server;
 
         //  a reference to the server instance
@@ -702,7 +684,6 @@ namespace RapidServer.Http.Type2
                 {
                     SetHeader("Connection", "keep-alive");
                 }
-
             }
 
             //  set any headers required by the requested resource's mimetype
@@ -725,9 +706,7 @@ namespace RapidServer.Http.Type2
                                     - (delimIndex - 2)));
                     SetHeader(key, value);
                 }
-
             }
-
         }
 
         public object Content
@@ -773,7 +752,6 @@ namespace RapidServer.Http.Type2
                     //  no compression should be used on this resource, write the data as-is (uncompressed or already-compressed)
                     ms.Write(contentBytes, 0, contentBytes.Length);
                 }
-
             }
 
             byte[] cbuf = null;
@@ -786,20 +764,20 @@ namespace RapidServer.Http.Type2
             _content = cbuf;
         }
 
-        void SetContent(string contentString)
+        private void SetContent(string contentString)
         {
             //  just pass the string as bytes to the primary SetContent method
             SetContent(Text.Encoding.ASCII.GetBytes(contentString));
         }
 
-        void SetHeader(string key, string value)
+        private void SetHeader(string key, string value)
         {
             //  TODO: this seems to be trying to set the Reponse Headers several times per page load... e.g. _headers.Add(key, key & value) says item already exists
             // _Headers[key) = key & ": " & value
             _headers[key] = value;
         }
 
-        string GetHeaderString()
+        private string GetHeaderString()
         {
             string s = "";
             s += ("HTTP/1.1 "
@@ -848,7 +826,7 @@ namespace RapidServer.Http.Type2
         // '' </summary>
         // '' <returns></returns>
         // '' <remarks></remarks>
-        string StatusCodeMessage()
+        private string StatusCodeMessage()
         {
             string msg = "";
             switch (StatusCode)
@@ -856,6 +834,7 @@ namespace RapidServer.Http.Type2
                 case 200:
                     msg = "OK";
                     break;
+
                 case 404:
                     msg = "Page not found.";
                     break;
@@ -863,20 +842,20 @@ namespace RapidServer.Http.Type2
             return msg;
         }
 
-        void WriteHeader(object statusCode)
+        private void WriteHeader(object statusCode)
         {
             //  TODO: write the full header to the client stream
         }
 
-        void Send(int statusCode, string message)
+        private void Send(int statusCode, string message)
         {
         }
 
-        void SendFile(int statusCode, byte[] file)
+        private void SendFile(int statusCode, byte[] file)
         {
         }
 
-        void Finish()
+        private void Finish()
         {
             //  TODO: finish the response cycle by flushing buffered data in the client stream
         }
@@ -886,9 +865,8 @@ namespace RapidServer.Http.Type2
     // '' A shared buffer which the SocketAsyncEventArgsPool utilizes to read/write data without memory thrashing/fragmentation.
     // '' </summary>
     // '' <remarks></remarks>
-    class BufferManager
+    internal class BufferManager
     {
-
         private int m_numBytes;
 
         private byte[] m_buffer;
@@ -907,10 +885,10 @@ namespace RapidServer.Http.Type2
             m_freeIndexPool = new Stack<int>();
         }
 
-        //  Allocates buffer space used by the buffer pool 
+        //  Allocates buffer space used by the buffer pool
         public void InitBuffer()
         {
-            //  create one big large buffer and divide that  
+            //  create one big large buffer and divide that
             //  out to each SocketAsyncEventArg object
             m_buffer = new byte[] {
                     (byte)(m_numBytes - 1)};
@@ -952,7 +930,6 @@ namespace RapidServer.Http.Type2
     // '' <remarks></remarks>
     public class AsyncUserToken
     {
-
         private Net.Sockets.Socket _socket;
 
         public string Content;
@@ -983,9 +960,8 @@ namespace RapidServer.Http.Type2
     // '' A pool of reusable SocketAsyncEventArgs objects.
     // '' </summary>
     // '' <remarks></remarks>
-    class SocketAsyncEventArgsPool
+    internal class SocketAsyncEventArgsPool
     {
-
         private Stack<Net.Sockets.SocketAsyncEventArgs> m_pool;
 
         public SocketAsyncEventArgsPool(int capacity)
@@ -993,10 +969,10 @@ namespace RapidServer.Http.Type2
             m_pool = new Stack<Net.Sockets.SocketAsyncEventArgs>(capacity);
         }
 
-        //  Add a SocketAsyncEventArg instance to the pool 
-        //  
-        // The "item" parameter is the SocketAsyncEventArgs instance 
-        //  to add to the pool 
+        //  Add a SocketAsyncEventArg instance to the pool
+        //
+        // The "item" parameter is the SocketAsyncEventArgs instance
+        //  to add to the pool
         public void Push(Net.Sockets.SocketAsyncEventArgs item)
         {
             if ((item == null))
@@ -1004,12 +980,11 @@ namespace RapidServer.Http.Type2
                 throw new ArgumentNullException("Items added to a SocketAsyncEventArgsPool cannot be null");
             }
 
-            lock(m_pool)
+            lock (m_pool)
                 m_pool.Push(item);
         }
 
-
-        //  The number of SocketAsyncEventArgs instances in the pool 
+        //  The number of SocketAsyncEventArgs instances in the pool
         public int Count
         {
             get

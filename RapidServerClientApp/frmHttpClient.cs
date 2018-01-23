@@ -1,15 +1,14 @@
-﻿using System;
+﻿using RapidServer.Http.Type1;
+using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Management;
 using System.Windows.Forms;
-using Xml = System.Xml;
 using IO = System.IO;
 using Text = System.Text;
-using Management = System.Management;
-using RapidServer.Http.Type1;
-using System.Management;
-using System.Collections.Generic;
+using Xml = System.Xml;
 
 namespace RapidServerClientApp
 {
@@ -78,12 +77,12 @@ namespace RapidServerClientApp
         // '' Loads the server config file http.xml from disk and configures the server to operate as defined by the config.
         // '' </summary>
         // '' <remarks></remarks>
-        void LoadConfig()
+        private void LoadConfig()
         {
-            //  TODO: Xml functions are very picky after load, if we try to access a key that doesn't exist it will throw a 
-            //    vague error that does not stop the debugger on the error line, and the innerexception states 'object reference 
+            //  TODO: Xml functions are very picky after load, if we try to access a key that doesn't exist it will throw a
+            //    vague error that does not stop the debugger on the error line, and the innerexception states 'object reference
             //    not set to an instance of an object'. a custom function GetValue() helps avoid nulls but not this. default values should
-            //    be assumed by the server for cases when the value can't be loaded from the config, or the server should regenerate the config 
+            //    be assumed by the server for cases when the value can't be loaded from the config, or the server should regenerate the config
             //    per its known format and then load it.
             if ((IO.File.Exists("client.xml") == false))
             {
@@ -135,19 +134,17 @@ namespace RapidServerClientApp
                     {
                         t.Data.ResponseTime = nn.InnerText;
                     }
-
                 }
 
                 Tools.Add(t.Name, t);
             }
-
         }
 
-        void CreateConfig()
+        private void CreateConfig()
         {
         }
 
-        void DetectSystemInfo()
+        private void DetectSystemInfo()
         {
             if ((Chart1.Titles.Count == 1))
             {
@@ -179,11 +176,10 @@ namespace RapidServerClientApp
                                 + (cpuName + (" - "
                                 + (totalRam + "GB"))))));
             }
-
         }
 
         //  runs the benchmark tool with selected parameters
-        void RunBenchmark()
+        private void RunBenchmark()
         {
             if ((TabControl3.SelectedTab.Text == "Speed"))
             {
@@ -195,12 +191,10 @@ namespace RapidServerClientApp
             }
             else
             {
-
             }
-
         }
 
-        //  TODO: this gets an unhandled exception when it tries to parse data that doesn't exist, we shouldn't assume 
+        //  TODO: this gets an unhandled exception when it tries to parse data that doesn't exist, we shouldn't assume
         //    we'll always have the data and use a try...catch here with error reporting
         private string SubstringBetween(string s, string startTag, string endTag)
         {
@@ -229,7 +223,6 @@ namespace RapidServerClientApp
                 Console.WriteLine(ex.Message);
                 return "";
             }
-
         }
 
         private string[] ParseAny(string s)
@@ -303,7 +296,6 @@ namespace RapidServerClientApp
                     {
                         results[0] = fields[int.Parse(spl[3])].Trim();
                     }
-
                 }
                 else if ((spl[2] == "last"))
                 {
@@ -331,7 +323,6 @@ namespace RapidServerClientApp
                     {
                         results[0] = fields[int.Parse(spl[3])].Trim();
                     }
-
                 }
                 else
                 {
@@ -362,15 +353,13 @@ namespace RapidServerClientApp
 
                         Array.Resize(ref results, results.Length);
                     }
-
                 }
-
             }
 
             return results;
         }
 
-        void ParseResults(string results)
+        private void ParseResults(string results)
         {
             stdout = results;
             Tool currentTool = (Tool)Tools[cboBenchmarkTool.Text];
@@ -395,7 +384,6 @@ namespace RapidServerClientApp
                     {
                         currentSite = s;
                     }
-
                 }
 
                 string seriesName = cboUrl.Text;
@@ -442,12 +430,10 @@ namespace RapidServerClientApp
                     //  update the rps log
                     TextBox1.AppendText(("FAIL WHALE!" + '\n'));
                 }
-
             }
-
         }
 
-        void TimeBenchmark()
+        private void TimeBenchmark()
         {
             Tool t = (Tool)Tools[cboBenchmarkTool.Text];
             string cmd = t.Time;
@@ -459,7 +445,7 @@ namespace RapidServerClientApp
             ParseResults(p.Output.ToString());
         }
 
-        void SpeedBenchmark()
+        private void SpeedBenchmark()
         {
             Tool t = (Tool)Tools[cboBenchmarkTool.Text];
             string cmd = t.Speed;
@@ -475,12 +461,12 @@ namespace RapidServerClientApp
         }
 
         //  ramp by increasing concurrency each iteration: http://wiki.dreamhost.com/Web_Server_Performance_Comparison
-        void RampBenchmark()
+        private void RampBenchmark()
         {
         }
 
         //  append message to log
-        void LogMessage(string message)
+        private void LogMessage(string message)
         {
             //  prepare the date
             string clrDate = "";
@@ -500,14 +486,14 @@ namespace RapidServerClientApp
         }
 
         //  connect to server failed (invoked server event)
-        void ConnectFailed()
+        private void ConnectFailed()
         {
             txtRaw.Text = "Could not connect." + '\n';
             txtLog.Text += "Could not connect." + '\n';
         }
 
         //  response is being handled by the server (invoked server event)
-        void HandleResponse(string res)
+        private void HandleResponse(string res)
         {
             txtRaw.Text += res;
         }
@@ -525,13 +511,11 @@ namespace RapidServerClientApp
                 client.Go(cboUrl.Text, null);
                 if (cboUrl.Items.Contains(cboUrl.Text))
                 {
-
                 }
                 else
                 {
                     cboUrl.Items.Add(cboUrl.Text);
                 }
-
             }
 
             btnGo.Enabled = true;
@@ -547,7 +531,6 @@ namespace RapidServerClientApp
             {
                 txtLog.WordWrap = false;
             }
-
         }
 
         private void btnDetectSystemInfo_Click(object sender, EventArgs e)
@@ -610,14 +593,14 @@ namespace RapidServerClientApp
             cboBenchmarkTool3.SelectedIndex = ((ComboBox)(sender)).SelectedIndex;
         }
     }
-    class DataPoint
-    {
 
+    internal class DataPoint
+    {
         public Hashtable Topics = new Hashtable();
     }
-    class ManagedProcess
-    {
 
+    internal class ManagedProcess
+    {
         public Process Process = new Process();
 
         public Text.StringBuilder Output = new Text.StringBuilder();
@@ -650,26 +633,25 @@ namespace RapidServerClientApp
             {
                 Output.Append("the tool process failed to run");
             }
-
         }
 
-        void ReadOutputAsync(object sender, DataReceivedEventArgs e)
+        private void ReadOutputAsync(object sender, DataReceivedEventArgs e)
         {
             Output.AppendLine(e.Data);
         }
     }
-    class Site
-    {
 
+    internal class Site
+    {
         public string Name;
 
         public string Description;
 
         public string Url;
     }
-    class Tool
-    {
 
+    internal class Tool
+    {
         public string Name;
 
         public string Path;
@@ -680,9 +662,9 @@ namespace RapidServerClientApp
 
         public ToolData Data = new ToolData();
     }
-    class ToolData
-    {
 
+    internal class ToolData
+    {
         public string RPS;
 
         public string CompletedRequests;

@@ -1,19 +1,17 @@
 ﻿using System;
-using Net = System.Net;
-using IO = System.IO;
-using Text = System.Text;
 using static RapidServer.Globals;
+using IO = System.IO;
+using Net = System.Net;
+using Text = System.Text;
 
 namespace RapidServer.Http.Type1
 {
-
     // '' <summary>
     // '' An object for passing off the request from an IOCP thread to a threadpool (worker) thread for processing.
     // '' </summary>
     // '' <remarks></remarks>
-    class HandleRequestObject
+    internal class HandleRequestObject
     {
-
         public byte[] requestBytes;
 
         public Server server;
@@ -37,7 +35,6 @@ namespace RapidServer.Http.Type1
     // '' <remarks></remarks>
     public class Request : SimpleRequestResponse
     {
-
         private Server _server;
 
         public Site Site;
@@ -115,7 +112,7 @@ namespace RapidServer.Http.Type1
         // '' </summary>
         // '' <param name="requestString"></param>
         // '' <remarks></remarks>
-        void ParseRequestString(string requestString)
+        private void ParseRequestString(string requestString)
         {
             //  parse the requestString to build up the request object
             string[] headerStringParts = HeaderString.Split('\n');
@@ -161,7 +158,6 @@ namespace RapidServer.Http.Type1
                             AbsPath = (Site.RootPath + RelPath);
                             break;
                         }
-
                     }
 
                     // Me.FileName = "index.html"
@@ -195,7 +191,6 @@ namespace RapidServer.Http.Type1
                         {
                             ScriptName = ScriptName.Replace(QueryString, "");
                         }
-
                     }
 
                     //  parse the requested resource's file type (extension) for use determining the mime type
@@ -213,9 +208,7 @@ namespace RapidServer.Http.Type1
                     //  set the content bytes
                     Content = Text.Encoding.ASCII.GetBytes(ContentString);
                 }
-
             }
-
         }
     }
 
@@ -225,7 +218,6 @@ namespace RapidServer.Http.Type1
     // '' <remarks></remarks>
     public class Response : SimpleRequestResponse
     {
-
         private Server _server;
 
         //  a reference to the server instance
@@ -265,7 +257,6 @@ namespace RapidServer.Http.Type1
                 {
                     Headers["Connection"] = "Keep-Alive";
                 }
-
             }
 
             //  set the Content-Encoding header to properly represent the requested resource's mimetype:
@@ -276,7 +267,6 @@ namespace RapidServer.Http.Type1
                 {
                     Headers["Content-Encoding"] = Enum.GetName(typeof(CompressionMethod), MimeType.Compress).ToLower();
                 }
-
             }
 
             //  set any custom response headers defined in the config file:
@@ -325,14 +315,12 @@ namespace RapidServer.Http.Type1
                         //  no compression should be used on this resource, just write the data as-is:
                         ms.Write(contentBytes, 0, contentBytes.Length);
                     }
-
                 }
                 else
                 {
                     //  no mimetype, just write the data as is:
                     ms.Write(contentBytes, 0, contentBytes.Length);
                 }
-
             }
 
             byte[] cbuf = null;
@@ -345,7 +333,7 @@ namespace RapidServer.Http.Type1
             _content = cbuf;
         }
 
-        void SetContent(string contentString)
+        private void SetContent(string contentString)
         {
             //  just pass the string as bytes to the primary SetContent method
             SetContent(Text.Encoding.UTF8.GetBytes(contentString));
@@ -353,7 +341,7 @@ namespace RapidServer.Http.Type1
 
         public string BuildHeaderString()
         {
-            string s = 
+            string s =
             ("HTTP/1.1 "
                         + (StatusCode + (" "
                         + (StatusCodeMessage() + '\n')))) +
@@ -372,7 +360,7 @@ namespace RapidServer.Http.Type1
         }
 
         //  TODO: merge this into BuildHeaderString(), doesn't need it's own func...
-        string BuildCookieString()
+        private string BuildCookieString()
         {
             string s = "";
             foreach (SimpleHttpHeader h in Cookies)
@@ -419,7 +407,7 @@ namespace RapidServer.Http.Type1
         // '' </summary>
         // '' <returns></returns>
         // '' <remarks></remarks>
-        string StatusCodeMessage()
+        private string StatusCodeMessage()
         {
             string msg = "";
             switch (int.Parse(StatusCode))
@@ -427,102 +415,135 @@ namespace RapidServer.Http.Type1
                 case 100:
                     msg = "Continue";
                     break;
+
                 case 101:
                     msg = "Switching Protocols";
                     break;
+
                 case 200:
                     msg = "OK";
                     break;
+
                 case 301:
                     msg = "Moved Permanently";
                     break;
+
                 case 302:
                     msg = "Found";
                     break;
+
                 case 303:
                     msg = "See Other";
                     break;
+
                 case 304:
                     msg = "Not Modified";
                     break;
+
                 case 305:
                     msg = "Use Proxy";
                     break;
+
                 case 306:
                     msg = "Unused StatusCode (Deprecated)";
                     break;
+
                 case 307:
                     msg = "Temporary Redirect";
                     break;
+
                 case 400:
                     msg = "Bad Request";
                     break;
+
                 case 401:
                     msg = "Unauthorized";
                     break;
+
                 case 402:
                     msg = "Payment Required";
                     break;
+
                 case 403:
                     msg = "Forbidden";
                     break;
+
                 case 404:
                     msg = "Page Not Found";
                     break;
+
                 case 405:
                     msg = "Method Not Allowed";
                     break;
+
                 case 406:
                     msg = "Not Acceptable";
                     break;
+
                 case 407:
                     msg = "Proxy Authentication Required";
                     break;
+
                 case 408:
                     msg = "Request Timeout";
                     break;
+
                 case 409:
                     msg = "Conflict";
                     break;
+
                 case 410:
                     msg = "Gone";
                     break;
+
                 case 411:
                     msg = "Length Required";
                     break;
+
                 case 412:
                     msg = "Precondition Failed";
                     break;
+
                 case 413:
                     msg = "Request Entity Too Large";
                     break;
+
                 case 414:
                     msg = "Request-URI Too Long";
                     break;
+
                 case 415:
                     msg = "Unsupported Media Type";
                     break;
+
                 case 416:
                     msg = "Requested Range Not Satisfiable";
                     break;
+
                 case 417:
                     msg = "Expectation Failed";
                     break;
+
                 case 500:
                     msg = "Internal Server Error";
                     break;
+
                 case 501:
                     msg = "Not Implemented";
                     break;
+
                 case 502:
                     msg = "Bad Gateway";
                     break;
+
                 case 503:
                     msg = "Service Unavailable";
                     break;
+
                 case 504:
                     msg = "Gateway Timeout";
                     break;
+
                 case 505:
                     msg = "HTTP Version Not Supported";
                     break;

@@ -4,14 +4,12 @@ using Net = System.Net;
 
 namespace RapidServer.Http.Type1
 {
-
     // '' <summary>
     // '' An HTTP client.
     // '' </summary>
     // '' <remarks></remarks>
     public class Client
     {
-
         public int SendBufferSize = 4096;
 
         public int ReceiveBufferSize = 4096;
@@ -24,17 +22,17 @@ namespace RapidServer.Http.Type1
 
         private bool _keepAlive;
 
-        event EventHandler HandleResponse;
+        private event EventHandler HandleResponse;
 
         private string res;
 
         private object state;
 
-        event EventHandler ConnectSucceeded;
+        private event EventHandler ConnectSucceeded;
 
-        event EventHandler ConnectFailed;
+        private event EventHandler ConnectFailed;
 
-        event EventHandler LogMessage;
+        private event EventHandler LogMessage;
 
         private string message;
 
@@ -76,7 +74,6 @@ namespace RapidServer.Http.Type1
                 {
                     hostAddress = ip.ToString();
                 }
-
             }
 
             return hostAddress;
@@ -102,10 +99,9 @@ namespace RapidServer.Http.Type1
                 DebugMessage("Could not connect to server.", DebugMessageType.ErrorMessage, "Connect", ex.Message);
                 ConnectFailed(state, null);
             }
-
         }
 
-        void AsyncClientConnected(IAsyncResult ar)
+        private void AsyncClientConnected(IAsyncResult ar)
         {
             //  get the async state object returned by the callback
             AsyncSendState asyncState = ((AsyncSendState)(ar.AsyncState));
@@ -143,7 +139,7 @@ namespace RapidServer.Http.Type1
                 //     End If
                 // End If
                 //  construct the GET request string and byte array:
-                //  NOTE: node.js requires two vbCrLf terminator where other servers only require one. IIS 7.5 requires HTTP/1.1 and Host 
+                //  NOTE: node.js requires two vbCrLf terminator where other servers only require one. IIS 7.5 requires HTTP/1.1 and Host
                 //    header or will not return headers with the response.
                 string reqString = "";
                 byte[] reqBytes = null;
@@ -155,15 +151,14 @@ namespace RapidServer.Http.Type1
                 LogMessage(reqString, null);
                 sendState.Socket.BeginSend(reqBytes, 0, reqBytes.Length, Net.Sockets.SocketFlags.None, new AsyncCallback(DataSent), sendState);
             }
-
         }
 
-        void Disconnect()
+        private void Disconnect()
         {
             _clientSocket.Disconnect(false);
         }
 
-        void DataSent(IAsyncResult ar)
+        private void DataSent(IAsyncResult ar)
         {
             //  get the async state object returned by the callback
             AsyncSendState asyncState = ((AsyncSendState)(ar.AsyncState));
@@ -175,7 +170,6 @@ namespace RapidServer.Http.Type1
             {
                 Console.WriteLine(("DataSent exception: " + ex.Message));
             }
-
         }
 
         // '' <summary>
@@ -183,13 +177,13 @@ namespace RapidServer.Http.Type1
         // '' </summary>
         // '' NOTE:
         // ''     Since HTTP is by nature a stream, a response will be sent by the server which is broken down into pieces per the
-        // ''     server's configured SendBufferSize, so we must continue issuing BeginReceive's on the socket until the end of the stream. 
-        // ''     We can properly detect the end of stream per the HTTP spec which states that the Content-Length header should be used to stop 
-        // ''     issuiing BeginReceive's when the total bytes received equals the Header + Content length, or in the case of a 
+        // ''     server's configured SendBufferSize, so we must continue issuing BeginReceive's on the socket until the end of the stream.
+        // ''     We can properly detect the end of stream per the HTTP spec which states that the Content-Length header should be used to stop
+        // ''     issuiing BeginReceive's when the total bytes received equals the Header + Content length, or in the case of a
         // ''     "Transfer-Encoding: chunked" header we look for a null character which signals termination of the chunked stream.
         // '' <param name="ar"></param>
         // '' <remarks></remarks>
-        void DataReceived(IAsyncResult ar)
+        private void DataReceived(IAsyncResult ar)
         {
             //  get the async state object returned by the callback
             AsyncReceiveState asyncState = ((AsyncReceiveState)(ar.AsyncState));

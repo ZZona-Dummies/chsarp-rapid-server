@@ -6,21 +6,19 @@
 // TODO: Option Strict On ... Warning!!! not translated
 
 using System;
+using System.Diagnostics;
+using IO = System.IO;
 using Net = System.Net;
 using Xml = System.Xml;
-using IO = System.IO;
-using System.Diagnostics;
 
 namespace RapidServer
 {
-
     // '' <summary>
     // '' The type of event to be logged. Some events will be enabled/disabled in the LogEvent method, depending on our current debugging goals.
     // '' </summary>
     // '' <remarks></remarks>
     public enum DebugMessageType
     {
-
         InfoMessage = 0,
 
         WarningMessage = 1,
@@ -34,14 +32,12 @@ namespace RapidServer
 
     public class Globals
     {
-
         // '' <summary>
         // '' Types of compression methods.
         // '' </summary>
         // '' <remarks></remarks>
         public enum CompressionMethod
         {
-
             None = 0,
 
             Gzip = 1,
@@ -55,7 +51,6 @@ namespace RapidServer
         // '' <remarks></remarks>
         public enum TransferMethod
         {
-
             StoreAndForward = 0,
 
             //  HTTP/1.0 - offers the "Connection: close" header, but generally HTTP/1.0 does not support persistent connections so we should always close the socket whether or not this header is present. Content-Length can be omitted as long as the socket is always closed after the response has been sent.
@@ -68,7 +63,6 @@ namespace RapidServer
         // '' <remarks></remarks>
         public class MimeType
         {
-
             public string Name = "";
 
             public string FileExtension = "";
@@ -109,7 +103,6 @@ namespace RapidServer
             {
                 for (int i = 0; i <= spl.Length - 1; i++)
                     spl[i] = spl[i].Trim();
-
             }
 
             parts[0] = spl[0];
@@ -133,7 +126,6 @@ namespace RapidServer
 
         public class AsyncReceiveState
         {
-
             public RapidServer.Http.Site Site;
 
             public Net.Sockets.Socket Socket;
@@ -167,7 +159,6 @@ namespace RapidServer
 
         public class AsyncSendState
         {
-
             public Net.Sockets.Socket Socket;
 
             public byte[] BytesToSend;
@@ -207,7 +198,6 @@ namespace RapidServer
                 {
                     return (BytesToSend.Length - Progress);
                 }
-
             }
         }
 
@@ -251,7 +241,6 @@ namespace RapidServer
                     firstSlice,
                     secondSlice};
             }
-
         }
 
         // '' <summary>
@@ -293,12 +282,15 @@ namespace RapidServer
                 case DebugMessageType.InfoMessage:
                     Console.WriteLine(message);
                     break;
+
                 case DebugMessageType.WarningMessage:
                     Console.WriteLine(message);
                     break;
+
                 case DebugMessageType.ErrorMessage:
                     Console.WriteLine(message);
                     break;
+
                 case DebugMessageType.UsageMessage:
                     // Console.WriteLine(message)
                     break;

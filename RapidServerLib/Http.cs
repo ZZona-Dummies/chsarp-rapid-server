@@ -7,7 +7,6 @@ using Text = System.Text;
 
 namespace RapidServer.Http
 {
-
     // '' <summary>
     // '' Global variables used throughout the library.
     // '' TODO: since the server and client apps use their own instance of the library, when the server sets these values,
@@ -25,7 +24,6 @@ namespace RapidServer.Http
     // '' <remarks></remarks>
     public class Site
     {
-
         public string Title;
 
         public string Path;
@@ -51,7 +49,6 @@ namespace RapidServer.Http
     // '' <remarks></remarks>
     public class SimpleHttpHeader
     {
-
         public string Key;
 
         public string Value;
@@ -63,7 +60,6 @@ namespace RapidServer.Http
     // '' <remarks></remarks>
     public class SimpleRequestResponse
     {
-
         public Hashtable Headers = new Hashtable();
 
         public ArrayList Cookies = new ArrayList();
@@ -134,7 +130,6 @@ namespace RapidServer.Http
                             {
                                 CacheAllowed = false;
                             }
-
                         }
 
                         //  only set the same header once
@@ -142,13 +137,9 @@ namespace RapidServer.Http
                         {
                             Headers.Add(headerParts[0], headerParts[1]);
                         }
-
                     }
-
                 }
-
             }
-
         }
     }
 
@@ -158,26 +149,24 @@ namespace RapidServer.Http
     // '' <remarks></remarks>
     public class Handlers
     {
-
         private Hashtable _handlers = new Hashtable();
 
         private string _webRoot;
 
-        void Add(Handler h)
+        private void Add(Handler h)
         {
             _handlers.Add(h.Name, h);
         }
 
-        Handler this[int index]
+        private Handler this[int index]
         {
             get => ((Handler)(from DictionaryEntry entry in _handlers.Values select entry.Key).Skip(index).FirstOrDefault());//(_handlers.Values.ElementAt(index)));
             set
             {
-
             }
         }
 
-        Handler this[string name]
+        private Handler this[string name]
         {
             get
             {
@@ -185,7 +174,6 @@ namespace RapidServer.Http
             }
             set
             {
-
             }
         }
     }
@@ -208,7 +196,6 @@ namespace RapidServer.Http
     // '' <remarks></remarks>
     public class PhpCgiHandler : Handler
     {
-
         public PhpCgiHandler()
         {
             Name = "PhpCgi";
@@ -271,8 +258,8 @@ namespace RapidServer.Http
             }
 
             //  read the output stream (aka stdout) to get the processed request from php:
-            //  TODO: ReadToEnd is thread blocking, we can use the async BeginOutputReadLine() function, but we must remember that we're 
-            //    spawning a separate php-cgi.exe process (thus new thread) for every php request; I benchmarked them and found no 
+            //  TODO: ReadToEnd is thread blocking, we can use the async BeginOutputReadLine() function, but we must remember that we're
+            //    spawning a separate php-cgi.exe process (thus new thread) for every php request; I benchmarked them and found no
             //    performance difference, no need to over-optimize this yet when our real goal is implementing a FastCGI handler...
             results = p.StandardOutput.ReadToEnd();
             //  close the process (not really needed - garbage collector takes care of it)
@@ -297,13 +284,13 @@ namespace RapidServer.Http
     // '' <remarks></remarks>
     public class AspDotNetHandler : Handler
     {
-
         public override string HandleRequest(Type1.Request req)
         {
             return null;
         }
     }
 }
+
 // UNDONE: maybe use this later
 // Namespace FastCgi
 //     Class Record
