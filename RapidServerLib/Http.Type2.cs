@@ -168,10 +168,10 @@ namespace RapidServer.Http.Type2
         // '' <param name="path"></param>
         // '' <returns></returns>
         // '' <remarks></remarks>
-        void GetContentType(string path)
+        public string GetContentType(string path)
         {
             string ext = IO.Path.GetExtension(path).TrimStart(".");
-            MimeType m = MimeTypes[ext];
+            MimeType m = (MimeType)MimeTypes[ext];
             string contentType;
             if (m != null)
                 contentType = m.Name;
@@ -193,7 +193,7 @@ namespace RapidServer.Http.Type2
             _bufferManager.InitBuffer();
             Net.Sockets.SocketAsyncEventArgs readWriteEventArg = new Net.Sockets.SocketAsyncEventArgs();
             //  allocate enough memory in the shared buffer, and enough SocketAsyncEventArgs objects, for the max connections that we wish to support
-            for (int i = 0; int i <= _maxConnections - 1; i++)
+            for (int i = 0; i <= _maxConnections - 1; ++i)
             {
                 readWriteEventArg = new Net.Sockets.SocketAsyncEventArgs();
                 readWriteEventArg.Completed += new System.EventHandler(this.IoCompleted);
@@ -243,11 +243,9 @@ namespace RapidServer.Http.Type2
         // '' <remarks></remarks>
         void ProcessAccept(Net.Sockets.SocketAsyncEventArgs e)
         {
-            Threading.Interlocked.Increment(_numConnections);
+            Threading.Interlocked.Increment(ref _numConnections);
             Net.Sockets.SocketAsyncEventArgs readEventArgs = _readWritePool.Pop;
-            readEventArgs.UserToken;
-            AsyncUserToken;
-            Socket = e.AcceptSocket;
+            ((AsyncUserToken)readEventArgs.UserToken).Socket = e.AcceptSocket;
             bool willRaiseEvent = e.AcceptSocket.ReceiveAsync(readEventArgs);
             if (!willRaiseEvent)
             {
@@ -280,12 +278,12 @@ namespace RapidServer.Http.Type2
         void ProcessReceive(Net.Sockets.SocketAsyncEventArgs e)
         {
             //  get the client who we are receiving data from
-            AsyncUserToken token = e.UserToken;
+            AsyncUserToken token = (AsyncUserToken)e.UserToken;
             //  handle the received data by parsing it into a request and sending a response in return
             if (((e.BytesTransferred > 0)
                         && (e.SocketError == Net.Sockets.SocketError.Success)))
             {
-                Threading.Interlocked.Add(_totalBytesRead, e.BytesTransferred);
+                Threading.Interlocked.Add(ref _totalBytesRead, e.BytesTransferred);
                 //  place the received data into the shared buffer to avoid frequent memory allocations as we process it
                 // e.SetBuffer(e.Offset, e.BytesTransferred) ' if bytesTransferred is very small (40 bytes) it will set the buffer size to 40 as well..and it will be 40 the next time receive...BAD NEWS
                 // e.SetBuffer(e.Offset, 4096)
@@ -298,8 +296,8 @@ namespace RapidServer.Http.Type2
                 //  probably pass the raw request to a threadpool thread for processing, where we can construct the req/res
                 Request req = new Request(s, this);
                 Response res = new Response(this, req, token.Socket);
-                string rs = ("HTTP/1.1 200 OK" + ("\r\n" + ("Content-Length: 2" + ("\r\n" + ("\r\n" + "hi")))));
-                byte[] rb = System.Text.Encoding.ASCII.GetBytes(rs);
+                string rs = ("HTTP/1.1 200 OK" + ('\n' + ("Content-Length: 2" + ('\n' + ('\n' + "hi")))));
+                byte[] rb = Text.Encoding.ASCII.GetBytes(rs);
                 // rb = res.GetResponseBytes
                 // e.SetBuffer(resb, 0, resb.Length)
                 // e.SetBuffer(e.Offset, 4096)
@@ -341,7 +339,7 @@ namespace RapidServer.Http.Type2
         {
             if ((e.SocketError == Net.Sockets.SocketError.Success))
             {
-                AsyncUserToken token = e.UserToken;
+                AsyncUserToken token = (AsyncUserToken)e.UserToken;
                 // ' TODO: LEFT OFF HERE
                 // Dim x As Net.Sockets.SocketAsyncEventArgs = _readWritePool.Pop
                 // x.UserToken = token
@@ -385,7 +383,7 @@ namespace RapidServer.Http.Type2
             //  serve the requested resource from the output cache or from disk; better yet, store the entire response and serve that up to save some time
             if ((OutputCache.ContainsKey(req.AbsoluteUrl) == true))
             {
-                Response cachedResponse = OutputCache[req.AbsoluteUrl];
+                Response cachedResponse = Response)OutputCache[req.AbsoluteUrl];
                 res = cachedResponse;
                 DebugMessage(("Serving resource from cache: "
                                 + (req.AbsoluteUrl + ".")), DebugMessageType.UsageMessage, "ClientRequest event");
@@ -486,7 +484,7 @@ namespace RapidServer.Http.Type2
 
         void CloseClientSocket(Net.Sockets.SocketAsyncEventArgs e)
         {
-            AsyncUserToken token = e.UserToken;
+            AsyncUserToken token = (AsyncUserToken)e.UserToken;
             try
             {
                 token.Socket.Shutdown(Net.Sockets.SocketShutdown.Send);
@@ -496,7 +494,7 @@ namespace RapidServer.Http.Type2
             }
 
             token.Socket.Close();
-            Threading.Interlocked.Decrement(_numConnections);
+            Threading.Interlocked.Decrement(ref _numConnections);
             _maxNumberAcceptedClients.Release();
             _readWritePool.Push(e);
             Console.WriteLine(_readWritePool.Count);
@@ -580,7 +578,7 @@ namespace RapidServer.Http.Type2
         Request(byte[] buffer, Server server)
         {
             _server = server;
-            object requestString = System.Text.Encoding.ASCII.GetString(buffer);
+            object requestString = Text.Encoding.ASCII.GetString(buffer);
             ParseRequestString((string)requestString);
         }
 
@@ -627,15 +625,13 @@ namespace RapidServer.Http.Type2
             //  parse the requested resource's file type (extension) and path
             FileType = IO.Path.GetExtension(Uri).TrimStart('.');
             //  parse the requested resource's mime type
-            MimeType m = _server.MimeTypes[FileType];
+            MimeType m = (MimeType)_server.MimeTypes[FileType];
             if ((m == null))
-            {
-                m = _server.MimeTypes[""];
-            }
+                m = (MimeType)_server.MimeTypes[""];
 
             MimeType = m;
             //  parse the remaining request headers
-            for (int i = 1; i <= (requestStringParts.Length - 2; i++)
+            for (int i = 1; i <= requestStringParts.Length - 2; i++)
             {
                 int delimIndex = requestStringParts[i].IndexOf(": ");
                 if ((delimIndex > 0))
@@ -744,7 +740,7 @@ namespace RapidServer.Http.Type2
             }
         }
 
-        void SetContent(byte[] contentBytes)
+        public void SetContent(byte[] contentBytes)
         {
             //  TODO: conditionally set Content-Length if needed - the header is not always necessary (e.g. when TransferMethod = ChunkedEncoding)
             IO.MemoryStream ms = new IO.MemoryStream();
@@ -752,7 +748,7 @@ namespace RapidServer.Http.Type2
             {
                 if ((MimeType.Compress == CompressionMethod.Gzip))
                 {
-                    System.IO.Compression.GZipStream gZip = new System.IO.Compression.GZipStream(ms, IO.Compression.CompressionMode.Compress, true);
+                    IO.Compression.GZipStream gZip = new IO.Compression.GZipStream(ms, IO.Compression.CompressionMode.Compress, true);
                     gZip.Write(contentBytes, 0, contentBytes.Length);
                     //  make sure we close the compression stream or else it won't flush the full buffer! see: http://stackoverflow.com/questions/6334463/gzipstream-compression-problem-lost-byte
                     gZip.Close();
@@ -760,7 +756,7 @@ namespace RapidServer.Http.Type2
                 }
                 else if ((MimeType.Compress == CompressionMethod.Deflate))
                 {
-                    System.IO.Compression.DeflateStream deflate = new System.IO.Compression.DeflateStream(ms, IO.Compression.CompressionMode.Compress, true);
+                    IO.Compression.DeflateStream deflate = new IO.Compression.DeflateStream(ms, IO.Compression.CompressionMode.Compress, true);
                     deflate.Write(contentBytes, 0, contentBytes.Length);
                     //  make sure we close the compression stream or else it won't flush the full buffer! see: http://stackoverflow.com/questions/6334463/gzipstream-compression-problem-lost-byte
                     deflate.Close();
@@ -787,7 +783,7 @@ namespace RapidServer.Http.Type2
         void SetContent(string contentString)
         {
             //  just pass the string as bytes to the primary SetContent method
-            SetContent(System.Text.Encoding.ASCII.GetBytes(contentString));
+            SetContent(Text.Encoding.ASCII.GetBytes(contentString));
         }
 
         void SetHeader(string key, string value)
@@ -800,24 +796,21 @@ namespace RapidServer.Http.Type2
         string GetHeaderString()
         {
             string s = "";
-            ("HTTP/1.1 "
+            s += ("HTTP/1.1 "
                         + (StatusCode + (" "
-                        + (StatusCodeMessage() + "\r\n"))));
+                        + (StatusCodeMessage() + '\n')))) +
             ("Content-Length: "
-                        + (ContentLength + "\r\n"));
+                        + (ContentLength + '\n')) +
             ("Content-Type: "
-                        + (ContentType + "\r\n"));
+                        + (ContentType + '\n')) +
             ("Date: "
-                        + (DateTime.Now.ToString("r") + "\r\n"));
+                        + (DateTime.Now.ToString("r") + '\n'));
             //  append the headers that have been dynamically or conditionally set (request headers, compression, etc)
             foreach (string h in _headers.Keys)
-            {
-                (h + (": "
-                            + (_headers[h] + "\r\n")));
-            }
+                s += h + ": " + _headers[h] + '\n';
 
             //  one extra cr/lf is required for delimiting the header from the content, per http specs
-            "\r\n";
+            s += '\n';
             return s;
         }
 
@@ -830,7 +823,7 @@ namespace RapidServer.Http.Type2
         {
             IO.MemoryStream ms = new IO.MemoryStream();
             //  get the header bytes and add it to the response
-            byte[] headerBytes = System.Text.Encoding.ASCII.GetBytes(GetHeaderString);
+            byte[] headerBytes = Text.Encoding.ASCII.GetBytes(GetHeaderString);
             ms.Write(headerBytes, 0, headerBytes.Length);
             //  if there is content, add it to the response
             if (_content != null)
@@ -914,7 +907,7 @@ namespace RapidServer.Http.Type2
             //  create one big large buffer and divide that  
             //  out to each SocketAsyncEventArg object
             m_buffer = new byte[] {
-                    (m_numBytes - 1)};
+                    (byte)(m_numBytes - 1)};
         }
 
         //  Assigns a buffer from the buffer pool to thespecified SocketAsyncEventArgs object returns true if the buffer was successfully set, else false.
@@ -1005,8 +998,8 @@ namespace RapidServer.Http.Type2
                 throw new ArgumentNullException("Items added to a SocketAsyncEventArgsPool cannot be null");
             }
 
-            m_pool;
-            m_pool.Push(item);
+            lock(m_pool)
+                m_pool.Push(item);
         }
 
 

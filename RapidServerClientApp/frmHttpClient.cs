@@ -210,12 +210,12 @@ namespace RapidServerClientApp
                 int i;
                 if ((startTag.ToLower() == Environment.NewLine))
                 {
-                    startTag = "\r\n";
+                    startTag = '\n';
                 }
 
                 if ((endTag.ToLower() == Environment.NewLine))
                 {
-                    endTag = "\r\n";
+                    endTag = '\n';
                 }
 
                 i = s.IndexOf(startTag);
@@ -257,13 +257,9 @@ namespace RapidServerClientApp
                 IO.StreamReader f = new IO.StreamReader(spl[0]);
                 string delim = "";
                 if ((spl[1] == "tabs"))
-                {
-                    delim = '\t';
-                }
+                    delim = "\t";
                 else
-                {
                     delim = ",";
-                }
 
                 //  determine if the tool data contains a formula
                 string[] formula = null;
@@ -343,8 +339,7 @@ namespace RapidServerClientApp
                 else
                 {
                     //  grab all the rows after a specific row index
-                    for (int i = 0; (i
-                                <= (spl[2] - 1)); i++)
+                    for (int i = 0; i <= spl[2] - 1; i++)
                     {
                         lines.RemoveAt(i);
                     }
@@ -384,7 +379,7 @@ namespace RapidServerClientApp
         void ParseResults(string results)
         {
             stdout = results;
-            Tool currentTool = this.Tools(cboBenchmarkTool.Text);
+            Tool currentTool = (Tool)Tools[cboBenchmarkTool.Text];
             //  parse it
             string[] requestsPerSecond = ParseAny(currentTool.Data.RPS);
             string[] completedRequests = ParseAny(currentTool.Data.CompletedRequests);
@@ -416,42 +411,42 @@ namespace RapidServerClientApp
                     //  update the rps log
                     //  TODO: remove sitename and match text color to legend color
                     TextBox1.AppendText((seriesName + (" - "
-                                    + (requestsPerSecond[0] + "\r\n"))));
+                                    + (requestsPerSecond[0] + '\n'))));
                     //  plot the requests completed value to the bar chart
                     if ((Chart1.Series.IndexOf(seriesName) == -1))
                     {
                         Chart1.Series.Add(seriesName);
                     }
 
-                    Chart1.Series(seriesName).Points.AddXY(0, requestsPerSecond[0]);
+                    Chart1.Series[seriesName].Points.AddXY(0, requestsPerSecond[0]);
                     //  plot the requests completed value to the bar chart
                     if ((Chart2.Series.IndexOf(seriesName) == -1))
                     {
                         Chart2.Series.Add(seriesName);
                     }
 
-                    Chart2.Series(seriesName).Points.AddXY(0, completedRequests[0]);
+                    Chart2.Series[seriesName].Points.AddXY(0, completedRequests[0]);
                     //  plot the gnuplot data to the line graph
                     if ((Chart3.Series.IndexOf(seriesName) == -1))
                     {
                         //  create the series for this url
                         Chart3.Series.Add(seriesName);
-                        Chart3.Series(seriesName).ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.FastLine;
+                        Chart3.Series[seriesName].ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.FastLine;
                     }
                     else
                     {
                         //  series was already plotted, clear the series and replot it
-                        Chart3.Series(seriesName).Points.Clear();
+                        Chart3.Series[seriesName].Points.Clear();
                     }
 
                     // For Each s As String In time
-                    //     Chart3.Series(seriesName).Points.AddXY(0, s)
+                    //     Chart3.Series[seriesName).Points.AddXY(0, s)
                     // Next
                 }
                 else
                 {
                     //  update the rps log
-                    TextBox1.AppendText(("FAIL WHALE!" + "\r\n"));
+                    TextBox1.AppendText(("FAIL WHALE!" + '\n'));
                 }
 
             }
@@ -505,16 +500,16 @@ namespace RapidServerClientApp
             //  client username - leave null for now
             txtLog.AppendText((" ["
                             + (clrDate + "]")));
-            txtLog.AppendText((" \"" + message.Replace("\r\n", " ").TrimEnd(' ')));
+            txtLog.AppendText((" \"" + message.Replace('\n', " ").TrimEnd(' ')));
             txtLog.AppendText("\"");
-            txtLog.AppendText("\r\n");
+            txtLog.AppendText('\n');
         }
 
         //  connect to server failed (invoked server event)
         void ConnectFailed()
         {
-            txtRaw.Text = "Could not connect." + "\r\n";
-            txtLog.Text += "Could not connect." + "\r\n";
+            txtRaw.Text = "Could not connect." + '\n';
+            txtLog.Text += "Could not connect." + '\n';
         }
 
         //  response is being handled by the server (invoked server event)

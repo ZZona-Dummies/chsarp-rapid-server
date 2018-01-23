@@ -80,7 +80,7 @@ namespace RapidServer.Http
 
         public bool CacheAllowed = true;
 
-        void Parse(string payload)
+        public void Parse(string payload)
         {
             //  parse the responseString into header/content parts
             // Dim headerPart As String = ""
@@ -88,7 +88,7 @@ namespace RapidServer.Http
             string contentPart = "";
             try
             {
-                int i = payload.IndexOf(("\r\n" + "\r\n"), StringComparison.Ordinal);
+                int i = payload.IndexOf(('\n' + '\n'), StringComparison.Ordinal);
                 //  TODO: this is very slow, use a string builder's substring instead
                 // headerPart = payload.Substring(0, i).Trim
                 headerPart.Append(payload, 0, i);

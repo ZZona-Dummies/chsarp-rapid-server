@@ -145,8 +145,8 @@ namespace RapidServer.Http.Type1
                 string reqString = "";
                 byte[] reqBytes = null;
                 reqString = ("GET "
-                            + (_req.Path + (" HTTP/1.1" + ("\r\n" + ("Host: "
-                            + (_req.Host + ("\r\n" + "\r\n")))))));
+                            + (_req.Path + (" HTTP/1.1" + ('\n' + ("Host: "
+                            + (_req.Host + ('\n' + '\n')))))));
                 reqBytes = System.Text.Encoding.ASCII.GetBytes(reqString);
                 //  send the reqBytes data to the server
                 LogMessage(reqString);
@@ -199,7 +199,7 @@ namespace RapidServer.Http.Type1
             {
                 string contentLength = "";
                 string transferEncoding = "";
-                contentLength = responseChunk.SubstringEx("Content-Length: ", "\r\n");
+                contentLength = responseChunk.SubstringEx("Content-Length: ", '\n');
                 asyncState.ReceiveSize = contentLength;
             }
 
@@ -207,7 +207,7 @@ namespace RapidServer.Http.Type1
             if ((asyncState.ContentOffset == 0))
             {
                 int contentOffset;
-                contentOffset = (responseChunk.IndexOf(("\r\n" + "\r\n")) + 4);
+                contentOffset = (responseChunk.IndexOf(('\n' + '\n')) + 4);
                 asyncState.ContentOffset = contentOffset;
             }
 

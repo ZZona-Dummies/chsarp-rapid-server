@@ -476,7 +476,7 @@ namespace RapidServer.Http.Type1
         {
             //  TODO: first try pull the request from the request cache, otherwise parse it now
             //  convert the raw request bytes/string into an HttpRequest object for ease of use
-            string reqString = System.Text.Encoding.ASCII.GetString(asyncState.Buffer).Trim('\0');
+            string reqString = Text.Encoding.ASCII.GetString(asyncState.Buffer).Trim('\0');
             Request req;
             //  pull the request object from the request cache, or create it now
             if (RequestCache.ContainsKey(reqString))

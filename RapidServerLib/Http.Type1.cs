@@ -1,4 +1,10 @@
-﻿namespace RapidServer.Http.Type1
+﻿using System;
+using Net = System.Net;
+using IO = System.IO;
+using Text = System.Text;
+using static RapidServer.Globals;
+
+namespace RapidServer.Http.Type1
 {
 
     // '' <summary>
@@ -10,7 +16,7 @@
 
         public byte[] requestBytes;
 
-        public RapidServer.Http.Type1.Server server;
+        public Server server;
 
         public Net.Sockets.Socket clientSocket;
 
@@ -79,7 +85,7 @@
             _server = server;
             RequestString = requestString;
             Site = site;
-            ClientAddress = client.RemoteEndPoint.ToString;
+            ClientAddress = client.RemoteEndPoint.ToString();
             //  convert the raw request data into a string and parse it
             // Me.RequestString = System.Text.Encoding.Default.GetString(buffer).Replace(Chr(0), "")
             //  parse raw data into strings
@@ -109,14 +115,14 @@
         void ParseRequestString(string requestString)
         {
             //  parse the requestString to build up the request object
-            string[] headerStringParts = HeaderString.Split("\r\n");
+            string[] headerStringParts = HeaderString.Split('\n');
             if ((headerStringParts[0].StartsWith("HEAD")
                         || (headerStringParts[0].StartsWith("GET") || headerStringParts[0].StartsWith("POST"))))
             {
                 //  parse the request line
                 RequestLine = headerStringParts[0];
                 string[] requestLineParts;
-                requestLineParts = RequestLine.Split(" ");
+                requestLineParts = RequestLine.Split(' ');
                 Method = requestLineParts[0];
                 Uri = requestLineParts[1];
                 Protocol = requestLineParts[2];
@@ -124,7 +130,7 @@
                 RelPath = Uri.Replace("/", "\\");
                 if (Uri.Contains("?"))
                 {
-                    string[] uriParts = Uri.Split("?");
+                    string[] uriParts = Uri.Split('?');
                     RelPath = uriParts[0].Replace("/", "\\");
                     QueryString = ("?" + uriParts[1]);
                 }
@@ -190,12 +196,12 @@
                     }
 
                     //  parse the requested resource's file type (extension) for use determining the mime type
-                    FileType = IO.Path.GetExtension(AbsPath).TrimStart(((char)(".")));
+                    FileType = IO.Path.GetExtension(AbsPath).TrimStart('.');
                     //  parse the requested resource's mime type
-                    MimeType m = ((MimeType)(_server.MimeTypes(FileType)));
+                    MimeType m = ((MimeType)(_server.MimeTypes[FileType]));
                     if ((m == null))
                     {
-                        m = ((MimeType)(_server.MimeTypes("")));
+                        m = (MimeType)_server.MimeTypes[""];
                     }
 
                     MimeType = m;
@@ -217,7 +223,7 @@
     public class Response : SimpleRequestResponse
     {
 
-        private Http.Type1.Server _server;
+        private Server _server;
 
         //  a reference to the server instance
         private byte[] _content;
@@ -249,22 +255,20 @@
             //  if the request includes a Connection: keep-alive header, we need to add it to the response:
             if ((req.Headers.ContainsKey("Connection") == true))
             {
-                if ((req.Headers("Connection").ToString.ToLower == "keep-alive"))
+                if ((req.Headers["Connection"].ToString().ToLower() == "keep-alive"))
                 {
-                    this.Headers("Connection") = "Keep-Alive";
+                    Headers["Connection"] = "Keep-Alive";
                 }
 
             }
 
             //  set the Content-Encoding header to properly represent the requested resource's mimetype:
-            if (req.MimeType)
+            if (req.MimeType != null)
             {
-                IsNot;
-                null;
                 MimeType = req.MimeType;
                 if ((MimeType.Compress != CompressionMethod.None))
                 {
-                    this.Headers("Content-Encoding") = Enum.GetName(typeof(CompressionMethod), MimeType.Compress).ToLower;
+                    Headers["Content-Encoding"] = Enum.GetName(typeof(CompressionMethod), MimeType.Compress).ToLower();
                 }
 
             }
@@ -276,7 +280,7 @@
             //     If delimIndex > 0 Then
             //         Dim key As String = s.Substring(0, delimIndex)
             //         Dim value As String = s.Substring(delimIndex + 2, s.Length - delimIndex - 2)
-            //         Me.Headers(key) = value
+            //         Me.Headers[key) = value
             //     End If
             // Next
         }
@@ -290,17 +294,13 @@
         {
             //  TODO: conditionally set Content-Length if needed - the header is not always necessary (e.g. when TransferMethod = ChunkedEncoding)
             IO.MemoryStream ms = new IO.MemoryStream();
-            if (contentBytes)
+            if (contentBytes != null)
             {
-                IsNot;
-                null;
-                if (MimeType)
+                if (MimeType != null)
                 {
-                    IsNot;
-                    null;
                     if ((MimeType.Compress == CompressionMethod.Gzip))
                     {
-                        System.IO.Compression.GZipStream gZip = new System.IO.Compression.GZipStream(ms, IO.Compression.CompressionMode.Compress, true);
+                        IO.Compression.GZipStream gZip = new IO.Compression.GZipStream(ms, IO.Compression.CompressionMode.Compress, true);
                         gZip.Write(contentBytes, 0, contentBytes.Length);
                         //  make sure we close the compression stream or else it won't flush the full buffer! see: http://stackoverflow.com/questions/6334463/gzipstream-compression-problem-lost-byte
                         gZip.Close();
@@ -308,7 +308,7 @@
                     }
                     else if ((MimeType.Compress == CompressionMethod.Deflate))
                     {
-                        System.IO.Compression.DeflateStream deflate = new System.IO.Compression.DeflateStream(ms, IO.Compression.CompressionMode.Compress, true);
+                        IO.Compression.DeflateStream deflate = new IO.Compression.DeflateStream(ms, IO.Compression.CompressionMode.Compress, true);
                         deflate.Write(contentBytes, 0, contentBytes.Length);
                         //  make sure we close the compression stream or else it won't flush the full buffer! see: http://stackoverflow.com/questions/6334463/gzipstream-compression-problem-lost-byte
                         deflate.Close();
@@ -331,7 +331,7 @@
 
             byte[,] cbuf;
             //  create a buffer exactly the size of the memorystream length (not its buffer length)
-            byte[] mbuf = ms.GetBuffer;
+            byte[] mbuf = ms.GetBuffer();
             ms.Close();
             ms.Dispose();
             Buffer.BlockCopy(mbuf, 0, cbuf, 0, cbuf.Length);
@@ -342,25 +342,24 @@
         void SetContent(string contentString)
         {
             //  just pass the string as bytes to the primary SetContent method
-            SetContent(System.Text.Encoding.UTF8.GetBytes(contentString));
+            SetContent(Text.Encoding.UTF8.GetBytes(contentString));
         }
 
         string BuildHeaderString()
         {
-            string s = "";
+            string s = 
             ("HTTP/1.1 "
                         + (StatusCode + (" "
-                        + (StatusCodeMessage() + "\r\n"))));
+                        + (StatusCodeMessage() + '\n')))) +
             ("Content-Length: "
-                        + (ContentLength + "\r\n"));
+                        + (ContentLength + '\n')) +
             ("Content-Type: "
-                        + (ContentType + "\r\n"));
+                        + (ContentType + '\n'));
             // s &= "Date: " & DateTime.Now.ToString("r") & vbCrLf ' TODO: high cost detected in profiler...reimplement using a faster date method
             //  append the headers that have been dynamically or conditionally set (request headers, compression, etc)
             foreach (string h in Headers.Keys)
             {
-                (h + (": "
-                            + (this.Headers(h).ToString + "\r\n")));
+                s += h + ": " + Headers[h].ToString() + '\n';
             }
 
             return s;
@@ -372,8 +371,8 @@
             string s = "";
             foreach (SimpleHttpHeader h in Cookies)
             {
-                (h.Key + (": "
-                            + (h.Value + "\r\n")));
+                s += (h.Key + (": "
+                            + (h.Value + '\n')));
             }
 
             return s;
@@ -387,10 +386,9 @@
         byte[] BuildResponseBytes()
         {
             IO.MemoryStream ms = new IO.MemoryStream();
-            string fullHeaderString = (this.BuildHeaderString
-                        + (this.BuildCookieString + "\r\n"));
+            string fullHeaderString = BuildHeaderString() + BuildCookieString() + '\n';
             //  one extra cr/lf separates header from content
-            byte[] fullHeaderBytes = System.Text.Encoding.ASCII.GetBytes(fullHeaderString);
+            byte[] fullHeaderBytes = Text.Encoding.ASCII.GetBytes(fullHeaderString);
             ms.Write(fullHeaderBytes, 0, fullHeaderBytes.Length);
             // ' get the header bytes and add it to the response
             // Dim headerBytes() As Byte = System.Text.Encoding.ASCII.GetBytes(Me.BuildHeaderString)
@@ -399,15 +397,13 @@
             // Dim cookieBytes() As Byte = System.Text.Encoding.ASCII.GetBytes(Me.BuildCookieString)
             // ms.Write(cookieBytes, 0, cookieBytes.Length)
             //  if there is content, add it to the response
-            if (_content)
+            if (_content != null)
             {
-                IsNot;
-                null;
                 ms.Write(_content, 0, _content.Length);
             }
 
             byte[,] rbuf;
-            byte[] mbuf = ms.GetBuffer;
+            byte[] mbuf = ms.GetBuffer();
             Buffer.BlockCopy(mbuf, 0, rbuf, 0, rbuf.Length);
             return rbuf;
         }
@@ -420,7 +416,7 @@
         string StatusCodeMessage()
         {
             string msg = "";
-            switch (StatusCode)
+            switch (int.Parse(StatusCode))
             {
                 case 100:
                     msg = "Continue";
